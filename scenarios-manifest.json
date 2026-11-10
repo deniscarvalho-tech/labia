@@ -1,0 +1,43 @@
+{
+  "base_seed": 20261110,
+  "counts": {
+    "train_per_cell": 15,
+    "test_per_cell": 1,
+    "test_heldout_per_cell": 13
+  },
+  "files": {
+    "train": {
+      "path": "data/scenarios/train.jsonl",
+      "sha256": "b94c5c196dfd30ebab128071fca045a7bf44905e95d20b345ed55296fd139cec",
+      "n": 2010,
+      "by_tactic": {
+        "authority": 420,
+        "fake_prior_promise": 330,
+        "institutional_threat": 420,
+        "none": 420,
+        "urgency_emotion": 420
+      },
+      "by_side": {
+        "golpe": 1005,
+        "legitimo": 1005
+      }
+    },
+    "test": {
+      "path": "data/scenarios/test.jsonl",
+      "sha256": "4465693b2f7f79027f0a92b13ce8b4de9da3d7c377f3d1377be365a0990791f0",
+      "n": 212,
+      "by_tactic": {
+        "authority": 28,
+        "fake_prior_promise": 22,
+        "institutional_threat": 28,
+        "none": 28,
+        "split_request": 78,
+        "urgency_emotion": 28
+      },
+      "by_side": {
+        "golpe": 106,
+        "legitimo": 106
+      }
+    }
+  }
+}
