@@ -35,8 +35,8 @@ def cmd_scenarios(args: argparse.Namespace) -> None:
             "by_side": dict(sorted(by_side.items())),
         }
         print(f"{split}: {len(scenarios)} cenários em {path} (sha256 {digest[:12]}…)")
-    Path("scenarios-manifest.json").write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    Path("scenarios-manifest.json").write_bytes(
+        (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     )
     print("manifesto em scenarios-manifest.json: ele congela o conjunto de teste")
 

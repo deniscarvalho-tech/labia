@@ -38,7 +38,8 @@ def export_schemas(out_dir: Path) -> list[Path]:
         target = out_dir / schema_name(published)
         schema = model.model_json_schema(mode="serialization")
         schema["$id"] = f"https://github.com/deniscarvalho-tech/labia/schemas/{target.name}"
-        target.write_text(json.dumps(schema, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        # bytes com "\n": o arquivo sai idêntico no Windows e no Linux da CI
+        target.write_bytes((json.dumps(schema, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
         written.append(target)
     return written
 
