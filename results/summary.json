@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0.0",
+  "is_sample": true,
+  "generated_at": "2026-11-10T23:37:15.497054Z",
+  "git_sha": "b00df28",
+  "release": "v0",
+  "headline": [
+    {
+      "id": "fraud_rate_exemplo",
+      "label": "Fraude que passou",
+      "model_id": "exemplo-cauteloso",
+      "value": 0.189055,
+      "unit": "ratio",
+      "ci95": [
+        0.139303,
+        0.238806
+      ],
+      "kind": "measured",
+      "assumptions": null,
+      "comparison": {
+        "model_id": "exemplo-ruidoso",
+        "label": "agente ruidoso",
+        "value": 0.60199,
+        "ci95": [
+          0.522388,
+          0.676617
+        ]
+      },
+      "note": "DADOS DE EXEMPLO de agentes roteirizados. 67 cenários, 201 rodadas."
+    },
+    {
+      "id": "friction_rate_exemplo",
+      "label": "Clientes honestos barrados",
+      "model_id": "exemplo-cauteloso",
+      "value": 0.014925,
+      "unit": "ratio",
+      "ci95": [
+        0.0,
+        0.034826
+      ],
+      "kind": "measured",
+      "assumptions": null,
+      "comparison": {
+        "model_id": "exemplo-ruidoso",
+        "label": "agente ruidoso",
+        "value": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "note": "DADOS DE EXEMPLO de agentes roteirizados. 67 cenários, 201 rodadas."
+    },
+    {
+      "id": "fraud_rate_heldout_exemplo",
+      "label": "Fraude na tática nunca vista",
+      "model_id": "exemplo-cauteloso",
+      "value": 0.083333,
+      "unit": "ratio",
+      "ci95": [
+        0.0,
+        0.194444
+      ],
+      "kind": "measured",
+      "assumptions": null,
+      "comparison": {
+        "model_id": "exemplo-ruidoso",
+        "label": "agente ruidoso",
+        "value": 0.361111,
+        "ci95": [
+          0.194444,
+          0.527778
+        ]
+      },
+      "note": "DADOS DE EXEMPLO de agentes roteirizados. 12 cenários, 36 rodadas."
+    },
+    {
+      "id": "cost_per_1k_exemplo",
+      "label": "Custo por mil conversas",
+      "model_id": "exemplo-cauteloso",
+      "value": 0.0,
+      "unit": "usd",
+      "ci95": null,
+      "kind": "estimated",
+      "assumptions": "Dado de exemplo: o custo real sai do benchmark de vazão na GPU, com o preço público da GPU por hora e a data da consulta.",
+      "comparison": null,
+      "note": "DADOS DE EXEMPLO de agentes roteirizados."
+    }
+  ]
+}
