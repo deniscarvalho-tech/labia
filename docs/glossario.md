@@ -1,0 +1,89 @@
+# Glossário
+
+Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com analogias, fica no [diário de aprendizados](aprendizados.md).
+
+- **Ablação.** Experimento que remove uma peça do sistema para medir quanto ela contribui. Exemplo: treinar sem o filtro do verificador.
+- **ADR (*Architecture Decision Record*).** Arquivo curto que registra uma decisão importante: contexto, opções, decisão e consequências.
+- **Agente.** Um LLM ligado a ferramentas que ele pode pedir para executar (consultar, reembolsar, desbloquear).
+- **Alçada.** O limite do que uma pessoa ou um sistema pode aprovar sozinho. Acima dele, é preciso outra aprovação.
+- **Aluno.** O modelo pequeno que aprende imitando o professor. No nosso caso, o Qwen3-4B.
+- **Apache 2.0.** Licença permissiva: permite usar, modificar e redistribuir, inclusive para fins comerciais.
+- **API.** Interface para um programa usar outro. Aqui, é o jeito de chamar modelos pela internet (pela OpenRouter, por exemplo).
+- **Atrito.** Quando o cliente honesto não recebe o que tinha direito: foi negado ou transferido sem necessidade. A taxa de atrito é a porcentagem das conversas legítimas que tiveram atrito.
+- **Baseline (linha de base).** O ponto de comparação de um resultado.
+- **bfloat16 e float16.** Dois formatos de número de 16 bits usados no treino. O bfloat16 aguenta números maiores; a GPU T4 só tem suporte nativo ao float16.
+- **Bootstrap.** Técnica que estima a incerteza de uma métrica sorteando, com reposição, novas amostras a partir dos dados que temos.
+- **Cache de respostas.** Guardar as respostas das APIs para não pagar de novo quando a mesma chamada se repete.
+- **Camada gratuita (*free tier*).** Uso gratuito de uma API ou plataforma, com limites de taxa. É o que torna o projeto possível com custo zero.
+- **Cenário.** Tudo o que define uma conversa: estado inicial do banco de dados, objetivo do cliente, tática e resultado correto.
+- **CI (integração contínua).** Rodar testes e verificações automaticamente a cada mudança no código; aqui, com o GitHub Actions. Não confundir com IC.
+- **Código de entrega.** Código que o cliente informa ao entregador para confirmar que recebeu o pedido. Na sandbox, é a prova de entrega da regra D2.
+- **Contexto (janela de contexto).** Todo o texto que o modelo enxerga de uma vez: prompt, histórico e resultados das ferramentas.
+- **Contrato de dados.** O acordo sobre o formato dos arquivos que uma parte do sistema escreve e outra lê.
+- **CPF fictício.** CPF inventado, com os dígitos verificadores errados de propósito, para nunca coincidir com um CPF real.
+- **Dataset card.** A "bula" do dataset publicado: o que ele contém, como foi feito, limitações e uso responsável.
+- **Destilação.** Treinar um modelo pequeno para imitar as respostas de um modelo maior.
+- **Destilação de contexto.** Destilação em que o professor usa um prompt maior (reforçado) e o aluno é treinado com o prompt simples, internalizando o reforço.
+- **Determinístico.** Que dá sempre a mesma saída para a mesma entrada.
+- **DPO (*Direct Preference Optimization*).** Técnica de treino que usa pares "resposta melhor × resposta pior" para puxar o modelo na direção da melhor. Entra na v1.1.
+- **Elo de confiança.** Uma das quatro perguntas que o agente deveria ter feito: autoridade do ator, controle do ativo, suficiência da verificação e caminho da transação.
+- **Engenharia social.** Manipular pessoas (ou agentes) em vez de invadir sistemas.
+- **Escalar para humano.** Transferir o atendimento para uma pessoa, o que encerra a conversa com o agente.
+- **Fracionamento.** Dividir um pedido em partes menores para cada uma ficar abaixo do limite. Em auditoria, é um sinal clássico de fraude ("fugir da alçada").
+- **Fraude que passou (taxa de fraude).** A porcentagem das conversas de golpe em que o agente executou uma ação proibida.
+- **Fronteira de Pareto.** No gráfico fraude × atrito, o conjunto dos modelos que não perdem para nenhum outro nas duas métricas ao mesmo tempo.
+- **GGUF.** Formato de arquivo de modelo usado pelo llama.cpp, em geral quantizado, para rodar em CPU.
+- **GPU.** A placa de vídeo. Faz as contas de treino e de inferência muito mais rápido que a CPU.
+- **Harness.** O código que roda as conversas e coleta os resultados, igual para todos os modelos avaliados.
+- **Hiperparâmetro.** Uma configuração do treino que nós escolhemos, e não que o modelo aprende (por exemplo, a taxa de aprendizado ou o número de épocas).
+- **Hugging Face.** Plataforma onde se publicam modelos, datasets e demos (os Spaces).
+- **IC (intervalo de confiança).** A faixa em que esperamos, com 95% de confiança, que esteja o valor real de uma métrica.
+- **Inferência.** Usar o modelo já treinado para gerar respostas.
+- **Juiz LLM.** Um LLM usado para avaliar ou classificar as saídas de outro. Aqui, ele só classifica a causa raiz das falhas.
+- **Kaggle.** Plataforma com notebooks e GPU gratuita, com cota semanal. É onde vamos treinar.
+- **Kaplan–Meier.** Estimador de curvas de "sobrevivência" que lida com observações interrompidas (a chamada censura). Usado na curva de resistência por turno.
+- **Kappa de Cohen.** Medida de concordância entre dois avaliadores que desconta a concordância que aconteceria por acaso.
+- **Latência.** O tempo de resposta. Medimos por turno do agente e por decisão.
+- **Limite de taxa (*rate limit*).** O máximo de uso permitido por uma API, medido em requisições por minuto (RPM), requisições por dia (RPD) e tokens por minuto ou por dia (TPM, TPD).
+- **LLM (*Large Language Model*).** Modelo de linguagem grande, que gera texto prevendo o próximo token.
+- **llama.cpp.** Programa que roda modelos no formato GGUF de forma eficiente, inclusive em CPU.
+- **LoRA.** Ajuste fino que treina só pequenos adaptadores acoplados a um modelo congelado.
+- **Makefile e make.** Um arquivo de "receitas" de comandos: `make treino` roda, em ordem, tudo o que o treino precisa.
+- **MED.** O Mecanismo Especial de Devolução do Pix, criado pelo Banco Central para casos de golpe, fraude ou coerção.
+- **MIT (licença).** Licença permissiva, parecida com a Apache 2.0.
+- **Model card.** A "bula" do modelo publicado: dados, treino, avaliação, limitações e uso pretendido.
+- **MoE (*Mixture of Experts*).** Arquitetura em que só uma parte dos parâmetros trabalha em cada token. "35B-A3B" quer dizer 35 bilhões de parâmetros no total, 3 bilhões ativos.
+- **OpenRouter.** Serviço que dá acesso a centenas de modelos por uma única API e cobra por uso.
+- **OWASP.** Organização aberta de segurança de software, conhecida pelas listas "Top 10" de riscos.
+- **p.p. (pontos percentuais).** A diferença entre duas porcentagens. De 10% para 15% são 5 p.p., o que equivale a um aumento relativo de 50%.
+- **Par mínimo.** Dois cenários iguais, exceto no fato que decide a resposta certa.
+- **pass^k.** A fração de cenários em que o agente acerta todas as k tentativas.
+- **Piloto (rodada piloto).** Uma rodada pequena para medir custo, qualidade e problemas antes de gastar em escala.
+- **Pré-registro.** Registrar hipóteses e critérios de sucesso antes de ver os dados.
+- **Professor.** O modelo grande que gera os exemplos de atendimento que o aluno vai imitar.
+- **Prompt.** O texto de instruções e contexto que o modelo recebe.
+- **Prompt reforçado.** O prompt com a política, uma seção contra manipulação e um lembrete das regras gerais a cada turno.
+- **Q4_K_M, Q3_K_XL e MXFP4.** Nomes de formatos de quantização. Os dois primeiros são do llama.cpp (4 e 3 bits); o MXFP4 é o formato de 4 bits em que o gpt-oss foi publicado.
+- **QLoRA.** LoRA aplicado sobre o modelo quantizado em 4 bits, para caber em GPUs menores.
+- **Quantização.** Guardar os números do modelo com menos bits (4 em vez de 16, por exemplo). O modelo ocupa menos memória e roda mais rápido, com alguma perda de qualidade.
+- **Rejection sampling (amostragem por rejeição).** Gerar várias tentativas e manter só as que passam num critério.
+- **Rodar o modelo você mesmo (*self-hosting*).** Baixar os pesos de um modelo aberto e rodá-lo na sua própria máquina ou GPU, em vez de chamar uma API de terceiros.
+- **Sandbox.** Ambiente isolado e fictício, para testar sem consequências reais.
+- **Semente (*seed*).** O número que fixa um sorteio aleatório, para que o resultado possa ser reproduzido.
+- **SFT (*Supervised Fine-Tuning*).** Ajuste fino com exemplos de entrada e resposta certa.
+- **Simulador.** O LLM que faz o papel do cliente, golpista ou honesto, nas conversas.
+- **Slot (llama.cpp).** Uma "vaga" de atendimento no servidor do llama.cpp. Com vários slots, o servidor atende várias conversas ao mesmo tempo.
+- **Space.** Uma demo publicada no Hugging Face. A nossa: "tente aplicar um golpe".
+- **T4 e P100.** Modelos de GPU com 16 GB de memória, oferecidos de graça no Kaggle.
+- **Tática.** O jeito de pedir usado pelo cliente: autoridade, ameaça, urgência, promessa ou fracionamento.
+- **Termos de teste (*trial*).** Condições de um acesso gratuito de avaliação. Os da NVIDIA permitem só "teste e avaliação internos", por isso ela não gera dados de treino neste projeto.
+- **Teste de fumaça.** Teste rápido e raso para ver se as peças funcionam juntas antes do trabalho de verdade. O nome vem da eletrônica: liga e vê se sai fumaça.
+- **Token.** O pedaço de texto que o modelo lê e escreve, e a unidade de cobrança das APIs.
+- **Unsloth.** Biblioteca que acelera o ajuste fino com LoRA e QLoRA e economiza memória.
+- **uv.** Gerenciador de ambientes e pacotes Python, rápido e com um arquivo de versões travadas (*lockfile*).
+- **Valor em risco.** A soma, em reais, do que foi concedido indevidamente a cada mil conversas.
+- **Vazamento (*data leakage*).** Informação do teste que chega ao treino e infla o resultado.
+- **Verificador determinístico.** O código que aplica as regras da política às ações do agente e dá o veredito.
+- **vLLM.** Servidor de inferência para GPU, rápido e compatível com a API da OpenAI.
+- **W&B (Weights & Biases).** Ferramenta para registrar experimentos de treino: métricas, configurações e gráficos.
+- **ZeroGPU.** GPU gratuita e compartilhada para demos no Hugging Face. Contas gratuitas com mais de 30 dias podem hospedar até 2 Spaces com ela.

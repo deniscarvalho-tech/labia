@@ -1,0 +1,9 @@
+# Finais de linha no padrão Linux (LF) em todos os textos: a CI e o Kaggle rodam Linux.
+* text=auto eol=lf
+
+# Arquivos binários: o git não deve tentar converter nem comparar como texto.
+*.png binary
+*.jpg binary
+*.pdf binary
+*.gguf binary
+*.safetensors binary

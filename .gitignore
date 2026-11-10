@@ -1,0 +1,51 @@
+# --- Segredos e briefings privados ---
+.env
+.env.*
+!.env.example
+BRIEFING.md
+# Os PDFs têm o mesmo conteúdo dos briefings, então também ficam fora do git.
+04_Labia_prompt.md.pdf
+05_Portfolio_prompt.md.pdf
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Dados e artefatos grandes (vão para o Hugging Face, não para o git) ---
+data/*
+!data/README.md
+!data/.gitkeep
+*.gguf
+*.safetensors
+*.bin
+*.pt
+checkpoints/
+outputs/
+wandb/
+mlruns/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- Front-end (Frente B, pasta web/) ---
+node_modules/
+web/dist/
+
+# --- Sistema e editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.claude/settings.local.json
+
+# Instruções do Claude Code: ficam só nesta máquina (decisão de 10/11/2026)
+CLAUDE.md
