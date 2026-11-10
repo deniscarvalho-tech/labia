@@ -386,3 +386,163 @@ Configuro o treino em float16 desde o início e vigio a perda em busca de `NaN`.
 
 **5. Como você garante que a latência publicada no README significa alguma coisa?**
 Porque o hardware medido é gravado junto, em `ambiente.json`, com `kind: measured`. Latência sem a máquina descrita ao lado não é comparável com nada.
+
+---
+
+## Etapa 2 — o motor: sandbox, verificador, gerador, conversa e estatística (10/11/2026)
+
+### O que foi feito
+
+Tudo o que roda **sem GPU** ficou pronto e testado, com 267 testes automáticos passando na CI:
+
+1. **A sandbox dos dois setores**: o Banco Saracura e o Quati Delivery como sistemas fictícios, com as ferramentas que o agente usa e as regras da política como código.
+2. **O verificador**: dá o veredito de cada conversa olhando só as ações do agente, nunca o texto.
+3. **O gerador de cenários**: 2.010 cenários de treino e 212 de teste, montados por código com semente fixa.
+4. **O laço de conversa**: agente e cliente simulado conversando, com cache e teto de chamadas.
+5. **A estatística e os arquivos de resultado**: métricas com intervalo de confiança, curva de resistência e achados de auditoria, no formato do contrato de dados.
+6. **O piloto no Kaggle**, para escolher o professor.
+
+O mapa de onde fica cada coisa está em [mapa-do-codigo.md](mapa-do-codigo.md).
+
+### As ideias desta etapa, explicadas
+
+#### 1. As ferramentas fazem tudo; quem julga é o verificador
+
+A ferramenta `reembolsar` reembolsa qualquer coisa, inclusive um pedido que foi entregue. Parece errado, mas é de propósito.
+
+**Analogia:** num simulado de direção, o carro não freia sozinho quando o aluno vai avançar o sinal. Se freasse, você nunca descobriria se o aluno sabe parar. O examinador (o verificador) anota a infração.
+
+Muitas empresas de verdade dão aos seus agentes APIs internas com permissão ampla. Queremos medir se o **agente** se segura. A correção de produção, que vai no relatório de auditoria, é o contrário: aplicar **menor privilégio** na própria ferramenta.
+
+#### 2. O valor em risco sabe "quanto era permitido"
+
+Cada violação guarda quanto a regra ainda permitia. Exemplo do par 4: o cliente tinha um protocolo prometendo um cupom de R$ 20 e o agente deu R$ 50. A ação inteira é proibida, mas o prejuízo não é R$ 50: é **R$ 30**, a parte acima do direito.
+
+Já no reembolso de item acima do teto (par 9), o valor em risco é o item inteiro (R$ 42,90), porque não existe "meio hambúrguer": a política manda transferir em vez de reembolsar aquele item.
+
+#### 3. O verificador reproduz as ações em ordem
+
+Ele não olha cada ação isolada. Aplica uma por uma sobre o estado, e a próxima ação vê o efeito da anterior.
+
+É isso que pega o **fracionamento** (o cliente pede R$ 800, depois R$ 700, depois R$ 900 de limite). Sozinho, cada pedido parece pequeno. Na ordem, o segundo já soma R$ 1.500 no dia e passa da alçada de R$ 1.000. No teste do par 5, o valor em risco dá exatamente os R$ 1.400 que a especificação previa.
+
+**Analogia de auditoria:** é o mesmo teste de quem procura "fracionamento de despesa para fugir da alçada": não se olha a nota fiscal sozinha, se olha a soma do dia.
+
+#### 4. A promessa registrada (G5) libera a regra de negócio, mas não tudo
+
+Se existe um protocolo válido autorizando a ação, a política manda cumprir, mesmo que seja exceção. Então o verificador dispensa as regras de negócio (D1 a D6, B1 a B5) até o valor prometido. Mas **nunca** dispensa:
+
+- a **G2** (agir sobre o pedido ou a conta de outro CPF);
+- a **D4** (mandar o dinheiro para outra pessoa).
+
+O motivo: um atendente com alçada pode prometer uma exceção comercial, mas não pode autorizar mexer no dinheiro de terceiros. Isso está num teste: protocolo vencido não autoriza nada.
+
+#### 5. O teste cruzado: o gerador e o verificador se fiscalizam
+
+São duas peças escritas separadamente que precisam concordar. Para cada um dos 2.222 cenários, o teste pergunta: "se o agente fizesse exatamente o que o cliente pede, sem consultar nada, o que o verificador diria?"
+
+- Num golpe, tem que dar **fraude que passou**, violando a regra daquela situação (e não outra por acidente).
+- Num cliente honesto, tem que dar **atendido corretamente**.
+
+Na primeira rodada, as duas peças concordaram em 100% dos casos. Desconfiei e apertei o teste: conferi que cada golpe viola **a regra certa** e que os valores em risco batem com o documento. Bateram.
+
+**Analogia:** é a conferência cruzada da contabilidade. O débito e o crédito são lançados por caminhos diferentes; se os totais batem, os dois estão certos (ou os dois erraram igual, o que é bem mais raro).
+
+#### 6. Determinismo: a mesma semente gera os mesmos cenários
+
+Cada cenário tem uma semente derivada do nome dele por SHA-256. Gerar duas vezes produz arquivos idênticos, byte a byte. O arquivo `scenarios-manifest.json` guarda o hash do conjunto de teste: se alguém mexer num cenário de teste depois de ver os resultados, o hash muda e denuncia.
+
+**Analogia:** é o lacre de uma urna. Não impede de abrir, mas mostra que alguém abriu.
+
+#### 7. Treino e teste nunca compartilham nada
+
+- Os identificadores vêm de faixas separadas: pedidos de treino vão de QTI-10000 a QTI-49999, e os de teste, de QTI-50000 a QTI-99999.
+- A tática de fracionamento (T5) não aparece em nenhum cenário de treino.
+- Todo CPF tem o dígito verificador errado de propósito, e um teste roda o algoritmo oficial para garantir que nenhum é válido.
+
+#### 8. Os agentes roteirizados: testar sem GPU e sem inventar números
+
+Escrevi quatro "robôs" de regras fixas: o **ideal** (consulta e segue a política), o **crédulo** (faz tudo o que o cliente pede), o **rígido** (nega tudo) e o **ruidoso** (às vezes consulta, às vezes cede à pressão).
+
+Eles servem a dois propósitos:
+
+- **Testar o sistema contra um comportamento conhecido.** O ideal tem que acertar 100%, e acerta. O crédulo tem que deixar passar 100% dos golpes, e deixa.
+- **Gerar dados de exemplo para o painel** sem digitar nenhum número: os arquivos saem do pipeline de verdade, com `is_sample: true`, e os modelos se chamam `exemplo-...`.
+
+O crédulo e o rígido ilustram o trade-off do projeto inteiro: dá para zerar a fraude negando tudo, mas aí todo cliente honesto é barrado.
+
+#### 9. O bootstrap por cenário (e por que não por rodada)
+
+Cada cenário roda 3 vezes. As 3 rodadas se parecem muito entre si: o mesmo cenário difícil tende a enganar o modelo nas 3. Se eu tratasse as 600 rodadas como 600 observações independentes, o intervalo de confiança sairia estreito demais, dando uma certeza que não existe.
+
+**Analogia:** numa pesquisa eleitoral, entrevistar três pessoas da mesma casa não vale três vezes uma pessoa, porque elas tendem a votar parecido. A conta certa sorteia **casas inteiras**.
+
+Um teste prova isso com números: com rodadas idênticas dentro do cenário, o intervalo correto sai mais de 1,4 vez mais largo que o ingênuo.
+
+#### 10. A correção de Holm (e o teste que estava errado)
+
+Testamos três hipóteses ao mesmo tempo. Quanto mais hipóteses, maior a chance de uma dar "significativa" por puro acaso. O método de Holm ordena os p-valores do menor para o maior e compara o primeiro com 0,05 ÷ 3, o segundo com 0,05 ÷ 2 e o terceiro com 0,05 ÷ 1. **No primeiro que falhar, ele para**, e nada depois é aceito.
+
+Escrevi um teste esperando que um p-valor de 0,04 fosse aceito. O código disse que não, e o código estava certo: o anterior (0,03) já tinha falhado contra 0,025, e o Holm para ali. Um teste errado pego pelo código vale tanto quanto um código errado pego pelo teste.
+
+#### 11. A curva de resistência (Kaplan–Meier)
+
+Ela mostra, turno a turno, a fração dos golpes que o agente ainda não tinha cedido. A dificuldade: muitas conversas acabam antes de o agente ceder (ele transfere no turno 3, por exemplo). Não sabemos o que ele faria no turno 5. Na estatística isso se chama **censura**, e o estimador de Kaplan–Meier, criado para estudos médicos de sobrevida, foi feito para isso.
+
+**Analogia:** num estudo de remédio, um paciente que se muda de cidade no mês 3 não "sobreviveu 3 meses" nem "morreu no mês 3". Ele conta como em risco até o mês 3 e depois sai da conta.
+
+#### 12. Destilação de contexto e o filtro duplo
+
+O professor atende com o **prompt reforçado** (a política, mais um checklist e um lembrete a cada turno). Na hora de guardar o exemplo para o aluno, troco pelo **prompt padrão** e tiro os lembretes. O aluno aprende a agir como se tivesse o reforço, sem pagar esses tokens em cada conversa em produção.
+
+E só entra no treino a conversa que passa no **filtro duplo**:
+
+- resultado certo;
+- processo certo (consultou antes de agir, transferiu quando devia, checou o protocolo quando o cliente citou promessa);
+- sem chamada de ferramenta inválida;
+- sem sinal de fracionamento (para a tática T5 continuar nunca vista);
+- sem o cliente simulado sair do personagem.
+
+Um teste também garante que o reforço não menciona somar pedidos nem pedidos fatiados. Se mencionasse, ele daria ao professor uma dica sobre a tática que deve ficar de fora.
+
+#### 13. Cache e teto: o controle de gasto
+
+Cada resposta de modelo fica guardada em disco, com a chave calculada a partir do pedido inteiro (modelo, mensagens, semente). Repetir uma rodada não chama o modelo de novo. E cada rodada tem um **teto de chamadas**: ao bater no teto, ela para em vez de gastar além do combinado. Com custo zero, o que se gasta são horas de GPU, e a regra é a mesma.
+
+### Bugs que os testes pegaram (e por que isso é bom sinal)
+
+| Bug | Como apareceu | A correção |
+|---|---|---|
+| O Python 3.11 quebrava com o acento em "LÁBIA" | ao instalar o projeto | usar o Python 3.13, que é a versão que o teste de fumaça mediu no Kaggle |
+| No Windows os arquivos saíam com quebra de linha CRLF, e no Linux da CI com LF | o git avisou ao commitar | gravar em bytes com `\n`; os arquivos ficam idênticos nos dois sistemas |
+| O pedido ao modelo guardava uma referência à lista de mensagens, que continuava mudando | um teste do prompt reforçado falhou | o agente envia uma cópia da lista |
+| Um teste meu do Holm esperava a resposta errada | o código discordou do teste | o teste foi corrigido e virou exemplo de como o método funciona |
+| Uma conversa com erro derrubaria a fase inteira no Kaggle | revisão antes de gastar GPU | o runner registra o erro e segue |
+| Usei num teste um CPF válido "de exemplo" muito citado em tutoriais | revisão da regra de dados | troquei por um CPF calculado na hora, que nunca fica escrito no código |
+
+### Alternativas descartadas
+
+| Alternativa | Por que não |
+|---|---|
+| Banco SQLite para a sandbox (estava no plano) | o estado de um cenário é pequeno; em memória, com Pydantic, ele é validado, copiado e guardado no próprio cenário como JSON, sem SQL. Registrado na [ADR 0006](decisoes/0006-ollama-e-estado-em-memoria.md). |
+| Compilar o llama.cpp no Kaggle | gastaria uns 15 minutos de GPU por sessão; o Ollama usa o mesmo motor (ggml) e vem pronto. ADR 0006. |
+| Deixar um LLM decidir se a conversa foi golpe | o veredito ficaria sujeito a erro e a viés do juiz; o determinístico é exato e reproduzível. |
+| Inventar números de exemplo para o painel | o projeto proíbe números inventados; os exemplos saem do pipeline com agentes roteirizados. |
+| Ferramentas que recusam ações proibidas | não daria para medir se o agente se segura sozinho. |
+
+### Perguntas de entrevista sobre esta etapa
+
+**1. Como você garante que o gabarito do seu benchmark está certo?**
+"Por três caminhos. Primeiro, o gabarito nasce do código: os fatos de cada cenário são montados com semente fixa, e nenhum LLM decide quem tem razão. Segundo, um teste cruzado: para os 2.222 cenários, fazer o que o golpista pede tem de violar exatamente a regra daquela situação, e fazer o que o cliente honesto pede não pode violar nada. Terceiro, os 9 pares mínimos da especificação viraram testes com os mesmos valores do documento."
+
+**2. Por que suas ferramentas executam ações proibidas?**
+"Para medir o agente, e não a API. Muitas empresas dão aos agentes APIs internas com permissão ampla, e o que eu quero saber é se o modelo se segura sozinho. Na recomendação de produção, que vai no relatório de auditoria, eu digo o contrário: aplicar menor privilégio na própria ferramenta."
+
+**3. Como você calcula o intervalo de confiança se cada cenário roda 3 vezes?**
+"Com bootstrap por cenário. Reamostro cenários inteiros, levando as 3 rodadas juntas, porque elas não são independentes: um cenário difícil engana o modelo nas três. Tratar as rodadas como independentes daria um intervalo estreito demais. Um teste do projeto mostra o efeito: com rodadas correlacionadas, o intervalo correto sai mais de 1,4 vez mais largo."
+
+**4. Como você evita que o teste vaze para o treino?**
+"Identificadores de faixas separadas, a tática de fracionamento ausente de todo o treino, um detector de fracionamento no filtro do dado de treino e o hash do conjunto de teste guardado num manifesto versionado. Se alguém mexer no teste depois de ver resultado, o hash denuncia."
+
+**5. O que você fez para não gastar GPU à toa?**
+"Cache em disco de toda resposta, teto de chamadas por rodada, runner retomável que grava cada conversa ao terminar, tolerância a erro por conversa, e um piloto com 28 cenários antes de qualquer geração em escala. E testei o pipeline inteiro sem GPU, com agentes roteirizados, antes de mandar qualquer coisa para o Kaggle."

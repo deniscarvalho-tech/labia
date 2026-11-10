@@ -5,6 +5,7 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **Ablação.** Experimento que remove uma peça do sistema para medir quanto ela contribui. Exemplo: treinar sem o filtro do verificador.
 - **ADR (*Architecture Decision Record*).** Arquivo curto que registra uma decisão importante: contexto, opções, decisão e consequências.
 - **Agente.** Um LLM ligado a ferramentas que ele pode pedir para executar (consultar, reembolsar, desbloquear).
+- **Agente roteirizado.** Um agente de regras fixas (não é um modelo), usado para testar o pipeline sem GPU e gerar dados de exemplo. Ex.: o 'crédulo' faz tudo o que o cliente pede.
 - **Alçada.** O limite do que uma pessoa ou um sistema pode aprovar sozinho. Acima dele, é preciso outra aprovação.
 - **Aluno.** O modelo pequeno que aprende imitando o professor. No nosso caso, o Qwen3-4B.
 - **Apache 2.0.** Licença permissiva: permite usar, modificar e redistribuir, inclusive para fins comerciais.
@@ -13,8 +14,11 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **Baseline (linha de base).** O ponto de comparação de um resultado.
 - **bfloat16 e float16.** Dois formatos de número de 16 bits usados no treino. O bfloat16 aguenta números maiores; a GPU T4 só tem suporte nativo ao float16.
 - **Bootstrap.** Técnica que estima a incerteza de uma métrica sorteando, com reposição, novas amostras a partir dos dados que temos.
+- **Bootstrap pareado.** Bootstrap em que o mesmo sorteio de cenários vale para os dois modelos comparados. Elimina a variação de 'um modelo pegou cenários mais fáceis'.
+- **Bootstrap por cenário (cluster bootstrap).** Bootstrap que sorteia cenários inteiros, levando as 3 rodadas juntas, porque rodadas do mesmo cenário não são independentes.
 - **Cache de respostas.** Guardar as respostas das APIs para não pagar de novo quando a mesma chamada se repete.
 - **Camada gratuita (*free tier*).** Uso gratuito de uma API ou plataforma, com limites de taxa. É o que torna o projeto possível com custo zero.
+- **Censura.** Quando a observação acaba antes do evento: a conversa terminou sem o agente ceder, e não sabemos se ele cederia depois. O Kaplan–Meier lida com isso.
 - **Cenário.** Tudo o que define uma conversa: estado inicial do banco de dados, objetivo do cliente, tática e resultado correto.
 - **CI (integração contínua).** Rodar testes e verificações automaticamente a cada mudança no código; aqui, com o GitHub Actions. Não confundir com IC.
 - **Código de entrega.** Código que o cliente informa ao entregador para confirmar que recebeu o pedido. Na sandbox, é a prova de entrega da regra D2.
@@ -29,13 +33,16 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **Elo de confiança.** Uma das quatro perguntas que o agente deveria ter feito: autoridade do ator, controle do ativo, suficiência da verificação e caminho da transação.
 - **Engenharia social.** Manipular pessoas (ou agentes) em vez de invadir sistemas.
 - **Escalar para humano.** Transferir o atendimento para uma pessoa, o que encerra a conversa com o agente.
+- **Filtro duplo.** A regra para uma conversa do professor virar dado de treino: resultado certo e processo certo, sem chamada inválida, sem sinal de fracionamento e sem o simulador sair do personagem.
 - **Fracionamento.** Dividir um pedido em partes menores para cada uma ficar abaixo do limite. Em auditoria, é um sinal clássico de fraude ("fugir da alçada").
 - **Fraude que passou (taxa de fraude).** A porcentagem das conversas de golpe em que o agente executou uma ação proibida.
 - **Fronteira de Pareto.** No gráfico fraude × atrito, o conjunto dos modelos que não perdem para nenhum outro nas duas métricas ao mesmo tempo.
 - **GGUF.** Formato de arquivo de modelo usado pelo llama.cpp, em geral quantizado, para rodar em CPU.
 - **GPU.** A placa de vídeo. Faz as contas de treino e de inferência muito mais rápido que a CPU.
 - **Harness.** O código que roda as conversas e coleta os resultados, igual para todos os modelos avaliados.
+- **Hash (SHA-256).** Uma 'impressão digital' de um arquivo: qualquer mudança, mesmo de uma letra, muda o hash. Usado para congelar o conjunto de teste.
 - **Hiperparâmetro.** Uma configuração do treino que nós escolhemos, e não que o modelo aprende (por exemplo, a taxa de aprendizado ou o número de épocas).
+- **Holm-Bonferroni.** Correção para testar várias hipóteses ao mesmo tempo: compara os p-valores, do menor ao maior, com limites cada vez menos exigentes e para no primeiro que falhar.
 - **Hugging Face.** Plataforma onde se publicam modelos, datasets e demos (os Spaces).
 - **IC (intervalo de confiança).** A faixa em que esperamos, com 95% de confiança, que esteja o valor real de uma métrica.
 - **Inferência.** Usar o modelo já treinado para gerar respostas.
@@ -45,16 +52,19 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **Kappa de Cohen.** Medida de concordância entre dois avaliadores que desconta a concordância que aconteceria por acaso.
 - **Latência.** O tempo de resposta. Medimos por turno do agente e por decisão.
 - **Limite de taxa (*rate limit*).** O máximo de uso permitido por uma API, medido em requisições por minuto (RPM), requisições por dia (RPD) e tokens por minuto ou por dia (TPM, TPD).
+- **Lint.** Verificação automática de estilo e de erros comuns no código, sem rodá-lo. Aqui, com o ruff.
 - **LLM (*Large Language Model*).** Modelo de linguagem grande, que gera texto prevendo o próximo token.
 - **llama.cpp.** Programa que roda modelos no formato GGUF de forma eficiente, inclusive em CPU.
 - **LoRA.** Ajuste fino que treina só pequenos adaptadores acoplados a um modelo congelado.
 - **Makefile e make.** Um arquivo de "receitas" de comandos: `make treino` roda, em ordem, tudo o que o treino precisa.
 - **MED.** O Mecanismo Especial de Devolução do Pix, criado pelo Banco Central para casos de golpe, fraude ou coerção.
+- **Menor privilégio.** Princípio de segurança: cada sistema só pode fazer o mínimo de que precisa. Ex.: a ferramenta de reembolso só aceitar o CPF da sessão.
 - **MIT (licença).** Licença permissiva, parecida com a Apache 2.0.
 - **Model card.** A "bula" do modelo publicado: dados, treino, avaliação, limitações e uso pretendido.
 - **MoE (*Mixture of Experts*).** Arquitetura em que só uma parte dos parâmetros trabalha em cada token. "35B-A3B" quer dizer 35 bilhões de parâmetros no total, 3 bilhões ativos.
 - **NaN (*not a number*).** O que resta de uma conta que estourou o formato numérico. Num treino, a perda vira NaN e o modelo passa a aprender lixo sem que nada dê erro: é a falha cara, a que não grita.
 - **OAuth.** Forma de autorizar um programa sem lhe entregar a sua senha: você autoriza no site, e o site devolve ao programa uma credencial própria, com prazo e escopo. É como o login do Kaggle feito por `kaggle auth login`.
+- **Ollama.** Programa que roda modelos GGUF com o motor do llama.cpp e expõe uma API no formato da OpenAI. Usado no Kaggle (ADR 0006).
 - **OpenRouter.** Serviço que dá acesso a centenas de modelos por uma única API e cobra por uso.
 - **OWASP.** Organização aberta de segurança de software, conhecida pelas listas "Top 10" de riscos.
 - **p.p. (pontos percentuais).** A diferença entre duas porcentagens. De 10% para 15% são 5 p.p., o que equivale a um aumento relativo de 50%.
@@ -69,7 +79,9 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **Q4_K_M, Q3_K_XL e MXFP4.** Nomes de formatos de quantização. Os dois primeiros são do llama.cpp (4 e 3 bits); o MXFP4 é o formato de 4 bits em que o gpt-oss foi publicado.
 - **QLoRA.** LoRA aplicado sobre o modelo quantizado em 4 bits, para caber em GPUs menores.
 - **Quantização.** Guardar os números do modelo com menos bits (4 em vez de 16, por exemplo). O modelo ocupa menos memória e roda mais rápido, com alguma perda de qualidade.
+- **Referência mutável.** Quando duas partes do código apontam para o mesmo objeto, e uma muda o objeto que a outra achava que estava parado. Foi um dos bugs desta etapa.
 - **Rejection sampling (amostragem por rejeição).** Gerar várias tentativas e manter só as que passam num critério.
+- **Retomável.** Que continua de onde parou se for interrompido. O runner grava cada conversa ao terminar e pula as que já estão no arquivo.
 - **Rodar o modelo você mesmo (*self-hosting*).** Baixar os pesos de um modelo aberto e rodá-lo na sua própria máquina ou GPU, em vez de chamar uma API de terceiros.
 - **Sandbox.** Ambiente isolado e fictício, para testar sem consequências reais.
 - **Semente (*seed*).** O número que fixa um sorteio aleatório, para que o resultado possa ser reproduzido.
@@ -78,6 +90,8 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **Slot (llama.cpp).** Uma "vaga" de atendimento no servidor do llama.cpp. Com vários slots, o servidor atende várias conversas ao mesmo tempo.
 - **Space.** Uma demo publicada no Hugging Face. A nossa: "tente aplicar um golpe".
 - **T4 e P100.** Modelos de GPU com 16 GB de memória, oferecidos de graça no Kaggle.
+- **Teste cruzado.** Teste em que duas peças escritas separadamente precisam concordar: aqui, o gerador de cenários e o verificador.
+- **Tipagem estática (mypy).** Conferência automática de que cada variável e cada função recebem o tipo de dado esperado, antes de rodar o código.
 - **Token de acesso e token de atualização (*access* e *refresh token*).** No OAuth, o token de acesso é o que autoriza cada requisição e vence em horas; o token de atualização não acessa nada, só serve para obter um token de acesso novo. Separá-los limita o estrago de um vazamento e permite cancelar um programa sem trocar a senha.
 - **Tática.** O jeito de pedir usado pelo cliente: autoridade, ameaça, urgência, promessa ou fracionamento.
 - **Termos de teste (*trial*).** Condições de um acesso gratuito de avaliação. Os da NVIDIA permitem só "teste e avaliação internos", por isso ela não gera dados de treino neste projeto.

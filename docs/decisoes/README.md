@@ -22,5 +22,6 @@ Todo ADR tem o mesmo formato:
 | [0003](0003-professor-e-simuladores.md) | Professor e simuladores na nossa GPU (custo zero); APIs gratuitas só para avaliação; destilação de contexto | aceita (revisão 2) |
 | [0004](0004-divisao-anti-vazamento.md) | Divisão por cenário e fracionamento como tática fora do treino | aceita |
 | [0005](0005-metricas-e-estatistica.md) | Métricas, intervalos de confiança e critérios de decisão | aceita |
+| [0006](0006-ollama-e-estado-em-memoria.md) | Ollama no lugar do llama.cpp compilado, e estado da sandbox em memória | aceita |
 
 ADRs previstos para os próximos dias: LoRA × QLoRA e hiperparâmetros (sexta, no treino), formato e quantização do GGUF (sábado) e estratégia do DPO (v1.1).
