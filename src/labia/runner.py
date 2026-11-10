@@ -10,6 +10,7 @@ import hashlib
 import json
 import threading
 import time
+import traceback
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
@@ -75,10 +76,19 @@ def run_batch(
             max_turns=max_turns,
         )
 
+    errors = 0
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(one, j) for j in pending]
+        futures = {pool.submit(one, j): j for j in pending}
         for i, fut in enumerate(as_completed(futures), start=1):
-            rec = fut.result()
+            try:
+                rec = fut.result()
+            except Exception as exc:  # uma conversa com erro não derruba a rodada inteira
+                errors += 1
+                job = futures[fut]
+                if errors <= 3:
+                    print(f"[{model_id}] erro em {job.scenario.id} r{job.run}:", flush=True)
+                    traceback.print_exception(exc)
+                continue
             with lock:
                 with out.open("ab") as fh:
                     fh.write((rec.model_dump_json() + "\n").encode("utf-8"))
@@ -87,9 +97,11 @@ def run_batch(
                 elapsed = time.perf_counter() - start
                 print(
                     f"[{model_id}] {i}/{len(pending)} conversas em {elapsed / 60:.1f} min "
-                    f"({i / max(elapsed, 1e-9) * 3600:.0f} por hora)",
+                    f"({i / max(elapsed, 1e-9) * 3600:.0f} por hora; {errors} com erro)",
                     flush=True,
                 )
+    if errors:
+        print(f"[{model_id}] {errors} conversas falharam e ficaram fora do arquivo (rodar de novo retoma)")
     return records
 
 
