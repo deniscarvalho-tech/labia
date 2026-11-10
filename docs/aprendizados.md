@@ -314,3 +314,75 @@ Os outros modelos rodam uns 200 cenários. O que isso muda no plano:
 - o Gemini roda num **pedaço menor** do teste (60 a 90 cenários);
 - com menos cenários, a incerteza é maior: o **intervalo de confiança dele fica mais largo**, e isso vai escrito ao lado do número;
 - a cota **não acumula**: o dia não usado se perde, como um vale-refeição que vence no fim do dia. Por isso a avaliação do Gemini começa já na quinta.
+
+---
+
+## Etapa 1 — acesso ao Kaggle e teste de fumaça do ambiente (10/11/2026)
+
+### O que foi feito
+
+1. Conectamos a conta do Kaggle pelo cliente oficial (`kaggle auth login`), usando OAuth em vez de token colado em arquivo.
+2. Escrevemos e rodamos, **em GPU real**, o notebook `notebooks/00-teste-de-fumaca/`, que mede o hardware que o Kaggle entrega e grava o resultado em `saida/ambiente.json`.
+
+### Por que foi feito assim
+
+**Por que OAuth e não o token da tela de configurações.** Os dois funcionam. O token é um segredo longo, sem prazo de validade, guardado em texto puro: se vazar, vale até alguém lembrar de expirá-lo à mão. O OAuth troca isso por duas credenciais com papéis separados — um *token de acesso*, que vence em 12 horas, e um *token de atualização*, que só serve para renovar o primeiro. A senha da conta não entra no fluxo, o escopo é explícito (`resources.admin:*`) e `kaggle auth revoke` cancela só este programa. Além da segurança, some a etapa manual de copiar e colar, e com ela o erro humano.
+
+**Por que um teste de fumaça antes de qualquer treino.** O orçamento do projeto inteiro é a cota semanal de GPU do Kaggle (cerca de 30 horas) e o prazo é domingo. Descobrir uma incompatibilidade do ambiente no meio de um treino custa horas de cota e uma noite. O teste custou menos de dois minutos de GPU.
+
+### O que o teste mediu (10/11/2026, `kind: measured`)
+
+| | Medido |
+|---|---|
+| GPU | 2× Tesla T4, 14,6 GB de VRAM cada |
+| Capacidade de cálculo | 7.5 (Turing) |
+| CUDA / PyTorch | 13.0 / 2.11.0 |
+| Python | 3.13.16 |
+| CPU / RAM | 4 núcleos / 31 GB |
+| Disco de trabalho | 20 GB |
+| Instalados | transformers 5.20.2, accelerate 1.15.0, peft 0.21.2, datasets 4.8.5 |
+| Ausentes | trl, bitsandbytes, vllm |
+
+### Os três achados e o que eles mudam no plano
+
+1. **O gargalo é o disco, não a VRAM.** São 20 GB no disco de trabalho, e o professor comprimido que queremos usar ocupa perto de 18 GB. O plano não previa esse limite. Consequência: o notebook do piloto precisa baixar o modelo direto para o disco temporário, ou usar uma quantização mais agressiva. Virou item de risco.
+2. **A T4 não tem suporte nativo a bfloat16.** O bfloat16 exige capacidade de cálculo 8.0 (Ampere) para cima; a T4 é 7.5. O treino usa float16, que é mais sujeito a estouro numérico. Isso entra na configuração desde o início.
+3. **Faltam `trl`, `bitsandbytes` e `vllm`.** A `trl` é a biblioteca que faz o ajuste fino. Instalação prevista no notebook de treino, com internet ligada.
+
+### Qual dos três teria custado mais caro
+
+O bfloat16 — não pelo tamanho, mas pelo **modo de falhar**. A falta de biblioteca quebra na primeira célula, com o nome do pacote no erro. O disco cheio quebra no download, com mensagem clara. Já o formato numérico errado pode deixar o treino rodar e produzir `NaN` depois de meia hora: o processo não para, só passa a aprender lixo, e você descobre na avaliação. A falha cara é a que não grita.
+
+### Conceitos desta etapa
+
+- **Teste de fumaça.** Verificação rápida e rasa feita antes do trabalho de verdade. Não prova que funciona; prova que não está obviamente quebrado. O nome vem da eletrônica: liga o circuito e vê se sai fumaça.
+- **VRAM × RAM.** VRAM é a memória da placa de vídeo; RAM é a do computador. O modelo é carregado na RAM antes de ir para a VRAM, então RAM pequena trava o carregamento mesmo com VRAM sobrando.
+- **VRAM não se soma.** Duas placas de 14,6 GB são dois espaços separados, e não um de 29 GB. Analogia: duas cozinhas em andares diferentes, com bancadas de 14,6 metros cada — não existe bancada de 29 metros.
+- **Paralelismo de pipeline.** O jeito de usar as duas placas mesmo assim: as camadas 1 a 24 numa, as 25 a 48 na outra, e os dados atravessam na ordem. Permite rodar um modelo maior que uma placa, com duas ressalvas: nenhuma camada isolada pode passar de 14,6 GB, e as placas se revezam em vez de trabalharem em paralelo no mesmo dado.
+- **bfloat16 × float16.** Dois formatos de 16 bits. O bfloat16 troca casas decimais por alcance, o que o torna mais resistente a estouro no treino, mas exige placas Ampere ou mais novas.
+
+### Alternativas descartadas
+
+| Alternativa | Por que não |
+|---|---|
+| Token de API colado em `~/.kaggle/access_token` | sem prazo de validade, em texto puro, com etapa manual de copiar e colar |
+| `kaggle.json` (sistema legado) | formato antigo; o cliente atual o aceita só por compatibilidade |
+| Pular o teste de fumaça e ir direto ao piloto | economizaria 2 minutos de GPU e arriscaria horas, com os três achados aparecendo durante o treino |
+| Rodar o notebook à mão pelo site do Kaggle | não é reproduzível nem versionável; pelo cliente, o notebook mora no repositório e sobe por comando |
+
+### Perguntas de entrevista sobre esta etapa
+
+**1. Por que você usou OAuth em vez de uma chave de API no Kaggle?**
+Porque a chave é um segredo permanente em texto puro, e o OAuth separa o token de acesso, que vence em 12 horas, do token de atualização, que só renova. Isso limita a janela de um vazamento, permite revogar só aquele programa sem trocar a senha e elimina a etapa manual de copiar e colar.
+
+**2. Você tem duas GPUs de 14,6 GB. Dá para carregar um modelo de 25 GB?**
+Não numa placa só, e a memória não se soma. Dá dividindo as camadas entre as duas, com paralelismo de pipeline. As restrições que a soma esconde são que nenhuma camada isolada pode passar de 14,6 GB e que as placas se revezam, então duas placas tornam o modelo possível, não duas vezes mais rápido.
+
+**3. Por que gastar tempo com um teste de fumaça num projeto com prazo apertado?**
+Justamente por causa do prazo. O orçamento é a cota de GPU, e uma incompatibilidade descoberta durante o treino custa horas de cota. O teste custou dois minutos e achou três problemas, um deles do tipo que falha silenciosamente.
+
+**4. O que você faria diferente sabendo que a T4 não suporta bfloat16?**
+Configuro o treino em float16 desde o início e vigio a perda em busca de `NaN`. Se aparecesse instabilidade, as saídas seriam reduzir a taxa de aprendizado, usar escalonamento de gradiente ou trocar de plataforma de GPU.
+
+**5. Como você garante que a latência publicada no README significa alguma coisa?**
+Porque o hardware medido é gravado junto, em `ambiente.json`, com `kind: measured`. Latência sem a máquina descrita ao lado não é comparável com nada.

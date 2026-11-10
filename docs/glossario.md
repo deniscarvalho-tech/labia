@@ -53,10 +53,13 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **MIT (licença).** Licença permissiva, parecida com a Apache 2.0.
 - **Model card.** A "bula" do modelo publicado: dados, treino, avaliação, limitações e uso pretendido.
 - **MoE (*Mixture of Experts*).** Arquitetura em que só uma parte dos parâmetros trabalha em cada token. "35B-A3B" quer dizer 35 bilhões de parâmetros no total, 3 bilhões ativos.
+- **NaN (*not a number*).** O que resta de uma conta que estourou o formato numérico. Num treino, a perda vira NaN e o modelo passa a aprender lixo sem que nada dê erro: é a falha cara, a que não grita.
+- **OAuth.** Forma de autorizar um programa sem lhe entregar a sua senha: você autoriza no site, e o site devolve ao programa uma credencial própria, com prazo e escopo. É como o login do Kaggle feito por `kaggle auth login`.
 - **OpenRouter.** Serviço que dá acesso a centenas de modelos por uma única API e cobra por uso.
 - **OWASP.** Organização aberta de segurança de software, conhecida pelas listas "Top 10" de riscos.
 - **p.p. (pontos percentuais).** A diferença entre duas porcentagens. De 10% para 15% são 5 p.p., o que equivale a um aumento relativo de 50%.
 - **Par mínimo.** Dois cenários iguais, exceto no fato que decide a resposta certa.
+- **Paralelismo de pipeline.** Dividir as camadas de um modelo entre várias GPUs: as primeiras camadas numa placa, as seguintes na outra. Permite rodar um modelo maior que a memória de uma placa só, mas as placas se revezam em vez de trabalharem juntas no mesmo dado.
 - **pass^k.** A fração de cenários em que o agente acerta todas as k tentativas.
 - **Piloto (rodada piloto).** Uma rodada pequena para medir custo, qualidade e problemas antes de gastar em escala.
 - **Pré-registro.** Registrar hipóteses e critérios de sucesso antes de ver os dados.
@@ -75,6 +78,7 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **Slot (llama.cpp).** Uma "vaga" de atendimento no servidor do llama.cpp. Com vários slots, o servidor atende várias conversas ao mesmo tempo.
 - **Space.** Uma demo publicada no Hugging Face. A nossa: "tente aplicar um golpe".
 - **T4 e P100.** Modelos de GPU com 16 GB de memória, oferecidos de graça no Kaggle.
+- **Token de acesso e token de atualização (*access* e *refresh token*).** No OAuth, o token de acesso é o que autoriza cada requisição e vence em horas; o token de atualização não acessa nada, só serve para obter um token de acesso novo. Separá-los limita o estrago de um vazamento e permite cancelar um programa sem trocar a senha.
 - **Tática.** O jeito de pedir usado pelo cliente: autoridade, ameaça, urgência, promessa ou fracionamento.
 - **Termos de teste (*trial*).** Condições de um acesso gratuito de avaliação. Os da NVIDIA permitem só "teste e avaliação internos", por isso ela não gera dados de treino neste projeto.
 - **Teste de fumaça.** Teste rápido e raso para ver se as peças funcionam juntas antes do trabalho de verdade. O nome vem da eletrônica: liga e vê se sai fumaça.
@@ -85,5 +89,6 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **Vazamento (*data leakage*).** Informação do teste que chega ao treino e infla o resultado.
 - **Verificador determinístico.** O código que aplica as regras da política às ações do agente e dá o veredito.
 - **vLLM.** Servidor de inferência para GPU, rápido e compatível com a API da OpenAI.
+- **VRAM.** A memória da própria GPU, separada da memória do computador (a RAM). Não se soma entre placas: duas GPUs de 14,6 GB são dois espaços de 14,6 GB, e não um de 29 GB.
 - **W&B (Weights & Biases).** Ferramenta para registrar experimentos de treino: métricas, configurações e gráficos.
 - **ZeroGPU.** GPU gratuita e compartilhada para demos no Hugging Face. Contas gratuitas com mais de 30 dias podem hospedar até 2 Spaces com ela.
