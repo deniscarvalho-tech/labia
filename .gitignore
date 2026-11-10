@@ -49,3 +49,11 @@ Thumbs.db
 
 # Instruções do Claude Code: ficam só nesta máquina (decisão de 10/11/2026)
 CLAUDE.md
+
+# Credenciais que nunca podem entrar no repositório, mesmo por engano
+kaggle.json
+access_token
+credentials.json
+
+# Cache das respostas dos modelos (pode ter gigabytes; vai para o Hugging Face quando for publicado)
+.cache/
