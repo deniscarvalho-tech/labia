@@ -42,6 +42,8 @@ class ChatRequest:
     top_p: float = 0.95
     max_tokens: int = 1024
     seed: int | None = None
+    #: Parâmetros próprios de um servidor ou modelo (ex.: reasoning_effort do gpt-oss). Entram na chave do cache.
+    extra: dict[str, Any] | None = None
 
     def cache_key(self) -> str:
         payload = json.dumps(asdict(self), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -99,6 +101,8 @@ class OpenAICompatClient:
             kwargs["tools"] = request.tools
         if request.seed is not None:
             kwargs["seed"] = request.seed
+        if request.extra:
+            kwargs["extra_body"] = request.extra
         start = time.perf_counter()
         resp = self._client.chat.completions.create(**kwargs)
         latency = time.perf_counter() - start

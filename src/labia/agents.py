@@ -42,9 +42,10 @@ class LLMAgent:
         temperature: float = 0.7,
         max_tokens: int = 1024,
         seed: int | None = None,
+        extra: dict[str, Any] | None = None,
     ) -> None:
         self.client, self.model = client, model
-        self.temperature, self.max_tokens, self.seed = temperature, max_tokens, seed
+        self.temperature, self.max_tokens, self.seed, self.extra = temperature, max_tokens, seed, extra
 
     def respond(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]]) -> ChatResponse:
         return self.client.complete(
@@ -55,6 +56,7 @@ class LLMAgent:
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
                 seed=self.seed,
+                extra=self.extra,
             )
         )
 
@@ -67,9 +69,12 @@ class LLMCustomer:
         scenario: Scenario,
         *,
         temperature: float = 0.9,
+        max_tokens: int = 400,
         seed: int | None = None,
+        extra: dict[str, Any] | None = None,
     ) -> None:
         self.client, self.model, self.seed, self.temperature = client, model, seed, temperature
+        self.max_tokens, self.extra = max_tokens, extra
         self.system = simulator_system_prompt(scenario)
 
     def next_message(self, history: list[tuple[str, str]]) -> str:
@@ -84,8 +89,9 @@ class LLMCustomer:
                 model=self.model,
                 messages=messages,
                 temperature=self.temperature,
-                max_tokens=300,
+                max_tokens=self.max_tokens,
                 seed=self.seed,
+                extra=self.extra,
             )
         )
         return clean_customer_text(response.content)
