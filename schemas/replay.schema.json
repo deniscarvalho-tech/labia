@@ -1,0 +1,459 @@
+{
+  "$defs": {
+    "AgentMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "turn": {
+          "minimum": 1,
+          "title": "Turn",
+          "type": "integer"
+        },
+        "role": {
+          "const": "agent",
+          "title": "Role",
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "tool_calls": {
+          "items": {
+            "$ref": "#/$defs/ToolCallRecord"
+          },
+          "title": "Tool Calls",
+          "type": "array"
+        }
+      },
+      "required": [
+        "turn",
+        "role",
+        "content"
+      ],
+      "title": "AgentMessage",
+      "type": "object"
+    },
+    "CustomerMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "turn": {
+          "minimum": 1,
+          "title": "Turn",
+          "type": "integer"
+        },
+        "role": {
+          "const": "customer",
+          "title": "Role",
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "turn",
+        "role",
+        "content"
+      ],
+      "title": "CustomerMessage",
+      "type": "object"
+    },
+    "Defense": {
+      "enum": [
+        "standard",
+        "reinforced"
+      ],
+      "title": "Defense",
+      "type": "string"
+    },
+    "Highlight": {
+      "additionalProperties": false,
+      "properties": {
+        "turn": {
+          "minimum": 1,
+          "title": "Turn",
+          "type": "integer"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "turn",
+        "text"
+      ],
+      "title": "Highlight",
+      "type": "object"
+    },
+    "ReplayConversation": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "scenario_id": {
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "model_id": {
+          "title": "Model Id",
+          "type": "string"
+        },
+        "defense": {
+          "$ref": "#/$defs/Defense"
+        },
+        "run": {
+          "minimum": 1,
+          "title": "Run",
+          "type": "integer"
+        },
+        "sector": {
+          "$ref": "#/$defs/Sector"
+        },
+        "tactic": {
+          "$ref": "#/$defs/Tactic"
+        },
+        "legit": {
+          "title": "Legit",
+          "type": "boolean"
+        },
+        "verdict": {
+          "$ref": "#/$defs/Verdict"
+        },
+        "violated_rules": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Violated Rules",
+          "type": "array"
+        },
+        "trust_link": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TrustLink"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "concession_turn": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Concession Turn"
+        },
+        "root_cause": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RootCauseLabel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value_at_risk_brl": {
+          "minimum": 0.0,
+          "title": "Value At Risk Brl",
+          "type": "number"
+        },
+        "highlight": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Highlight"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "messages": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "agent": "#/$defs/AgentMessage",
+                "customer": "#/$defs/CustomerMessage",
+                "tool": "#/$defs/ToolMessage"
+              },
+              "propertyName": "role"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/CustomerMessage"
+              },
+              {
+                "$ref": "#/$defs/AgentMessage"
+              },
+              {
+                "$ref": "#/$defs/ToolMessage"
+              }
+            ]
+          },
+          "title": "Messages",
+          "type": "array"
+        },
+        "cost_usd": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cost Usd"
+        },
+        "latency_s": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latency S"
+        }
+      },
+      "required": [
+        "id",
+        "scenario_id",
+        "model_id",
+        "defense",
+        "run",
+        "sector",
+        "tactic",
+        "legit",
+        "verdict",
+        "violated_rules",
+        "trust_link",
+        "root_cause",
+        "value_at_risk_brl",
+        "highlight",
+        "messages"
+      ],
+      "title": "ReplayConversation",
+      "type": "object"
+    },
+    "RootCause": {
+      "enum": [
+        "claim_accepted_without_check",
+        "checked_but_ignored",
+        "exception_misapplied",
+        "lost_cumulative_count",
+        "pressure_without_new_fact",
+        "third_party_asset",
+        "other"
+      ],
+      "title": "RootCause",
+      "type": "string"
+    },
+    "RootCauseLabel": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "$ref": "#/$defs/RootCause"
+        },
+        "source": {
+          "enum": [
+            "llm_judge",
+            "human"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "judge_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Judge Model"
+        },
+        "human_review": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RootCause"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "label",
+        "source",
+        "judge_model",
+        "human_review"
+      ],
+      "title": "RootCauseLabel",
+      "type": "object"
+    },
+    "Sector": {
+      "enum": [
+        "bank",
+        "delivery",
+        "retail",
+        "all"
+      ],
+      "title": "Sector",
+      "type": "string"
+    },
+    "Tactic": {
+      "enum": [
+        "none",
+        "authority",
+        "institutional_threat",
+        "urgency_emotion",
+        "fake_prior_promise",
+        "split_request",
+        "fake_proof",
+        "all"
+      ],
+      "title": "Tactic",
+      "type": "string"
+    },
+    "ToolCallRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": true,
+          "title": "Arguments",
+          "type": "object"
+        },
+        "valid": {
+          "title": "Valid",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "arguments",
+        "valid"
+      ],
+      "title": "ToolCallRecord",
+      "type": "object"
+    },
+    "ToolMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "turn": {
+          "minimum": 1,
+          "title": "Turn",
+          "type": "integer"
+        },
+        "role": {
+          "const": "tool",
+          "title": "Role",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "content": {
+          "title": "Content"
+        }
+      },
+      "required": [
+        "turn",
+        "role",
+        "name",
+        "content"
+      ],
+      "title": "ToolMessage",
+      "type": "object"
+    },
+    "TrustLink": {
+      "enum": [
+        "actor_authority",
+        "asset_control",
+        "verification_sufficiency",
+        "transaction_path"
+      ],
+      "title": "TrustLink",
+      "type": "string"
+    },
+    "Verdict": {
+      "enum": [
+        "fraud_blocked",
+        "fraud_passed",
+        "served_correctly",
+        "friction_denied",
+        "friction_escalated",
+        "overgrant"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "is_sample": {
+      "description": "true quando os dados são de exemplo; o script de publicação recusa.",
+      "title": "Is Sample",
+      "type": "boolean"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "git_sha": {
+      "pattern": "^[0-9a-f]{7,40}$",
+      "title": "Git Sha",
+      "type": "string"
+    },
+    "release": {
+      "pattern": "^v\\d+(\\.\\d+)*$",
+      "title": "Release",
+      "type": "string"
+    },
+    "conversations": {
+      "items": {
+        "$ref": "#/$defs/ReplayConversation"
+      },
+      "title": "Conversations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "is_sample",
+    "generated_at",
+    "git_sha",
+    "release",
+    "conversations"
+  ],
+  "title": "ReplayFile",
+  "type": "object",
+  "$id": "https://github.com/deniscarvalho-tech/labia/schemas/replay.schema.json"
+}

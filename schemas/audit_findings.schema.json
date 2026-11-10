@@ -1,0 +1,291 @@
+{
+  "$defs": {
+    "AuditScope": {
+      "additionalProperties": false,
+      "properties": {
+        "agents": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Agents",
+          "type": "array"
+        },
+        "sectors": {
+          "items": {
+            "$ref": "#/$defs/Sector"
+          },
+          "title": "Sectors",
+          "type": "array"
+        },
+        "tactics": {
+          "items": {
+            "$ref": "#/$defs/Tactic"
+          },
+          "title": "Tactics",
+          "type": "array"
+        },
+        "n_conversations": {
+          "minimum": 0,
+          "title": "N Conversations",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "agents",
+        "sectors",
+        "tactics",
+        "n_conversations"
+      ],
+      "title": "AuditScope",
+      "type": "object"
+    },
+    "Finding": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^ACH-\\d{3}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Rule Ids",
+          "type": "array"
+        },
+        "trust_link": {
+          "$ref": "#/$defs/TrustLink"
+        },
+        "models_affected": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Models Affected",
+          "type": "array"
+        },
+        "frequency": {
+          "$ref": "#/$defs/Frequency"
+        },
+        "value_at_risk_brl_per_1k": {
+          "minimum": 0.0,
+          "title": "Value At Risk Brl Per 1K",
+          "type": "number"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "root_cause": {
+          "title": "Root Cause",
+          "type": "string"
+        },
+        "recommendation": {
+          "title": "Recommendation",
+          "type": "string"
+        },
+        "retest": {
+          "$ref": "#/$defs/Retest"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "severity",
+        "rule_ids",
+        "trust_link",
+        "models_affected",
+        "frequency",
+        "value_at_risk_brl_per_1k",
+        "evidence",
+        "root_cause",
+        "recommendation",
+        "retest"
+      ],
+      "title": "Finding",
+      "type": "object"
+    },
+    "Frequency": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Value",
+          "type": "number"
+        },
+        "ci95": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ci95"
+        },
+        "kind": {
+          "$ref": "#/$defs/Kind"
+        }
+      },
+      "required": [
+        "value",
+        "ci95",
+        "kind"
+      ],
+      "title": "Frequency",
+      "type": "object"
+    },
+    "Kind": {
+      "enum": [
+        "measured",
+        "estimated"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "Retest": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "not_retested",
+            "fixed",
+            "still_failing"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Version"
+        }
+      },
+      "required": [
+        "status",
+        "version"
+      ],
+      "title": "Retest",
+      "type": "object"
+    },
+    "Sector": {
+      "enum": [
+        "bank",
+        "delivery",
+        "retail",
+        "all"
+      ],
+      "title": "Sector",
+      "type": "string"
+    },
+    "Tactic": {
+      "enum": [
+        "none",
+        "authority",
+        "institutional_threat",
+        "urgency_emotion",
+        "fake_prior_promise",
+        "split_request",
+        "fake_proof",
+        "all"
+      ],
+      "title": "Tactic",
+      "type": "string"
+    },
+    "TrustLink": {
+      "enum": [
+        "actor_authority",
+        "asset_control",
+        "verification_sufficiency",
+        "transaction_path"
+      ],
+      "title": "TrustLink",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "is_sample": {
+      "description": "true quando os dados são de exemplo; o script de publicação recusa.",
+      "title": "Is Sample",
+      "type": "boolean"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "git_sha": {
+      "pattern": "^[0-9a-f]{7,40}$",
+      "title": "Git Sha",
+      "type": "string"
+    },
+    "release": {
+      "pattern": "^v\\d+(\\.\\d+)*$",
+      "title": "Release",
+      "type": "string"
+    },
+    "scope": {
+      "$ref": "#/$defs/AuditScope"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "title": "Findings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "is_sample",
+    "generated_at",
+    "git_sha",
+    "release",
+    "scope",
+    "findings"
+  ],
+  "title": "AuditFile",
+  "type": "object",
+  "$id": "https://github.com/deniscarvalho-tech/labia/schemas/audit_findings.schema.json"
+}

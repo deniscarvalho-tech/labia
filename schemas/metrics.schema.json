@@ -1,0 +1,346 @@
+{
+  "$defs": {
+    "Curve": {
+      "additionalProperties": false,
+      "properties": {
+        "model_id": {
+          "title": "Model Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "resistance_by_turn",
+          "title": "Type",
+          "type": "string"
+        },
+        "split": {
+          "$ref": "#/$defs/Split"
+        },
+        "points": {
+          "items": {
+            "$ref": "#/$defs/CurvePoint"
+          },
+          "title": "Points",
+          "type": "array"
+        }
+      },
+      "required": [
+        "model_id",
+        "type",
+        "split",
+        "points"
+      ],
+      "title": "Curve",
+      "type": "object"
+    },
+    "CurvePoint": {
+      "additionalProperties": false,
+      "properties": {
+        "turn": {
+          "minimum": 0,
+          "title": "Turn",
+          "type": "integer"
+        },
+        "value": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Value",
+          "type": "number"
+        },
+        "ci95": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ci95"
+        }
+      },
+      "required": [
+        "turn",
+        "value",
+        "ci95"
+      ],
+      "title": "CurvePoint",
+      "type": "object"
+    },
+    "Defense": {
+      "enum": [
+        "standard",
+        "reinforced"
+      ],
+      "title": "Defense",
+      "type": "string"
+    },
+    "Kind": {
+      "enum": [
+        "measured",
+        "estimated"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "MetricName": {
+      "enum": [
+        "fraud_rate",
+        "friction_rate",
+        "friction_denied_rate",
+        "friction_escalated_rate",
+        "overgrant_rate",
+        "pass3",
+        "valid_tool_call_rate",
+        "verified_before_acting_rate",
+        "value_at_risk_brl_per_1k",
+        "cost_per_1k_usd",
+        "latency_turn_p50_s",
+        "latency_turn_p95_s",
+        "latency_decision_p50_s"
+      ],
+      "title": "MetricName",
+      "type": "string"
+    },
+    "MetricRow": {
+      "additionalProperties": false,
+      "properties": {
+        "model_id": {
+          "title": "Model Id",
+          "type": "string"
+        },
+        "sector": {
+          "$ref": "#/$defs/Sector"
+        },
+        "tactic": {
+          "$ref": "#/$defs/Tactic"
+        },
+        "split": {
+          "$ref": "#/$defs/Split"
+        },
+        "metric": {
+          "$ref": "#/$defs/MetricName"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        },
+        "ci95": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ci95"
+        },
+        "n_scenarios": {
+          "minimum": 0,
+          "title": "N Scenarios",
+          "type": "integer"
+        },
+        "n_runs": {
+          "minimum": 0,
+          "title": "N Runs",
+          "type": "integer"
+        },
+        "kind": {
+          "$ref": "#/$defs/Kind"
+        }
+      },
+      "required": [
+        "model_id",
+        "sector",
+        "tactic",
+        "split",
+        "metric",
+        "value",
+        "ci95",
+        "n_scenarios",
+        "n_runs",
+        "kind"
+      ],
+      "title": "MetricRow",
+      "type": "object"
+    },
+    "ModelInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9_+\\-.]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "base_model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Base Model"
+        },
+        "params_b": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Params B"
+        },
+        "license": {
+          "title": "License",
+          "type": "string"
+        },
+        "access": {
+          "enum": [
+            "self_hosted",
+            "api"
+          ],
+          "title": "Access",
+          "type": "string"
+        },
+        "defense": {
+          "$ref": "#/$defs/Defense"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "base_model",
+        "params_b",
+        "license",
+        "access",
+        "defense"
+      ],
+      "title": "ModelInfo",
+      "type": "object"
+    },
+    "Sector": {
+      "enum": [
+        "bank",
+        "delivery",
+        "retail",
+        "all"
+      ],
+      "title": "Sector",
+      "type": "string"
+    },
+    "Split": {
+      "enum": [
+        "seen_tactics",
+        "heldout_tactic",
+        "heldout_sector",
+        "all_test"
+      ],
+      "title": "Split",
+      "type": "string"
+    },
+    "Tactic": {
+      "enum": [
+        "none",
+        "authority",
+        "institutional_threat",
+        "urgency_emotion",
+        "fake_prior_promise",
+        "split_request",
+        "fake_proof",
+        "all"
+      ],
+      "title": "Tactic",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "is_sample": {
+      "description": "true quando os dados são de exemplo; o script de publicação recusa.",
+      "title": "Is Sample",
+      "type": "boolean"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "git_sha": {
+      "pattern": "^[0-9a-f]{7,40}$",
+      "title": "Git Sha",
+      "type": "string"
+    },
+    "release": {
+      "pattern": "^v\\d+(\\.\\d+)*$",
+      "title": "Release",
+      "type": "string"
+    },
+    "models": {
+      "items": {
+        "$ref": "#/$defs/ModelInfo"
+      },
+      "title": "Models",
+      "type": "array"
+    },
+    "rows": {
+      "items": {
+        "$ref": "#/$defs/MetricRow"
+      },
+      "title": "Rows",
+      "type": "array"
+    },
+    "curves": {
+      "items": {
+        "$ref": "#/$defs/Curve"
+      },
+      "title": "Curves",
+      "type": "array"
+    }
+  },
+  "required": [
+    "is_sample",
+    "generated_at",
+    "git_sha",
+    "release",
+    "models",
+    "rows",
+    "curves"
+  ],
+  "title": "MetricsFile",
+  "type": "object",
+  "$id": "https://github.com/deniscarvalho-tech/labia/schemas/metrics.schema.json"
+}

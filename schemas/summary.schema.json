@@ -1,0 +1,208 @@
+{
+  "$defs": {
+    "Comparison": {
+      "additionalProperties": false,
+      "properties": {
+        "model_id": {
+          "title": "Model Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        },
+        "ci95": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ci95"
+        }
+      },
+      "required": [
+        "model_id",
+        "label",
+        "value",
+        "ci95"
+      ],
+      "title": "Comparison",
+      "type": "object"
+    },
+    "HeadlineCard": {
+      "additionalProperties": false,
+      "description": "Um cartão que se descreve sozinho: o portfólio e o painel só renderizam.",
+      "properties": {
+        "id": {
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "model_id": {
+          "title": "Model Id",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        },
+        "unit": {
+          "enum": [
+            "ratio",
+            "usd",
+            "brl",
+            "seconds",
+            "count"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "ci95": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ci95"
+        },
+        "kind": {
+          "$ref": "#/$defs/Kind"
+        },
+        "assumptions": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Assumptions"
+        },
+        "comparison": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Comparison"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "model_id",
+        "value",
+        "unit",
+        "ci95",
+        "kind"
+      ],
+      "title": "HeadlineCard",
+      "type": "object"
+    },
+    "Kind": {
+      "enum": [
+        "measured",
+        "estimated"
+      ],
+      "title": "Kind",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "is_sample": {
+      "description": "true quando os dados são de exemplo; o script de publicação recusa.",
+      "title": "Is Sample",
+      "type": "boolean"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "git_sha": {
+      "pattern": "^[0-9a-f]{7,40}$",
+      "title": "Git Sha",
+      "type": "string"
+    },
+    "release": {
+      "pattern": "^v\\d+(\\.\\d+)*$",
+      "title": "Release",
+      "type": "string"
+    },
+    "headline": {
+      "items": {
+        "$ref": "#/$defs/HeadlineCard"
+      },
+      "title": "Headline",
+      "type": "array"
+    }
+  },
+  "required": [
+    "is_sample",
+    "generated_at",
+    "git_sha",
+    "release",
+    "headline"
+  ],
+  "title": "SummaryFile",
+  "type": "object",
+  "$id": "https://github.com/deniscarvalho-tech/labia/schemas/summary.schema.json"
+}
