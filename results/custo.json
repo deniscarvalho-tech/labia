@@ -1,0 +1,50 @@
+{
+  "kind": "estimated",
+  "premissas": [
+    "A vazão do modelo próprio vem da avaliação: uma T4 dedicada ao agente, 8 conversas ao mesmo tempo, esperando o cliente simulado a cada turno. A capacidade real é igual ou maior.",
+    "A latência foi medida com 8 conversas simultâneas na mesma GPU; não é a latência de um usuário sozinho.",
+    "O custo da API usa os tokens medidos de cada conversa e o preço público por milhão de tokens, sem desconto de cache.",
+    "O projeto não pagou nada: tudo rodou em camadas gratuitas."
+  ],
+  "precos": {
+    "gpu_t4_hora": {
+      "valor": 0.35,
+      "unidade": "USD por hora de GPU",
+      "fonte": "https://cloud.google.com/products/compute/gpus-pricing",
+      "consultado_em": "2026-11-11",
+      "nota": "Google Cloud, NVIDIA T4 sob demanda, por GPU, região us-west1. Não inclui a VM, o disco e a rede. A página é montada por JavaScript; o valor foi lido pela busca na própria página oficial."
+    }
+  },
+  "modelos": {
+    "base": {
+      "conversas": 636,
+      "latencia_turno_p50_s": 19.54,
+      "gpu_propria": {
+        "conversas_por_hora_de_gpu": 295.8,
+        "usd_por_mil_conversas": 1.1832,
+        "usd_por_mes_gpu_dedicada": 255.5,
+        "capacidade_por_mes": 215944
+      }
+    },
+    "base+reforco": {
+      "conversas": 636,
+      "latencia_turno_p50_s": 22.86,
+      "gpu_propria": {
+        "conversas_por_hora_de_gpu": 274.1,
+        "usd_por_mil_conversas": 1.2767,
+        "usd_por_mes_gpu_dedicada": 255.5,
+        "capacidade_por_mes": 200120
+      }
+    },
+    "sft": {
+      "conversas": 636,
+      "latencia_turno_p50_s": 14.19,
+      "gpu_propria": {
+        "conversas_por_hora_de_gpu": 441.7,
+        "usd_por_mil_conversas": 0.7925,
+        "usd_por_mes_gpu_dedicada": 255.5,
+        "capacidade_por_mes": 322416
+      }
+    }
+  }
+}

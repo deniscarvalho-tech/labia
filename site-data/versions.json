@@ -1,62 +1,86 @@
 {
   "schema_version": "1.0.0",
-  "is_sample": true,
-  "generated_at": "2026-11-11T18:04:52.011805Z",
+  "is_sample": false,
+  "generated_at": "2026-11-11T22:53:59.485792Z",
   "versions": [
     {
       "version": "v0",
-      "date": "2026-11-14",
+      "date": "2026-11-11",
       "title": "SFT com destilação filtrada pelo verificador",
       "status": "in_progress",
       "changes": [
-        "Dado de exemplo: a lista real sai do script de release."
+        "Qwen3-4B ajustado com LoRA nas conversas do professor aprovadas pelo verificador.",
+        "Avaliação de 3 configurações nos cenários de teste congelados, 3 rodadas, com o cliente simulado de outra família de modelos."
       ],
       "headline": [
         {
-          "id": "fraud_rate_exemplo",
+          "id": "fraud_rate_sft_vs_base",
           "label": "Fraude que passou",
-          "model_id": "exemplo-cauteloso",
-          "value": 0.223881,
+          "model_id": "sft",
+          "value": 0.174129,
           "unit": "ratio",
           "ci95": [
-            0.169154,
-            0.278607
+            0.114428,
+            0.233831
           ],
           "kind": "measured",
           "assumptions": null,
           "comparison": {
-            "model_id": "exemplo-ruidoso",
-            "label": "agente ruidoso",
-            "value": 0.656716,
+            "model_id": "base",
+            "label": "modelo-base",
+            "value": 0.169154,
             "ci95": [
-              0.577114,
-              0.731343
+              0.109453,
+              0.233831
             ]
           },
-          "note": "DADOS DE EXEMPLO de agentes roteirizados. 67 cenários, 201 rodadas."
+          "note": "Táticas vistas no treino. Bootstrap de cenários inteiros. 67 cenários, 201 rodadas."
         },
         {
-          "id": "friction_rate_exemplo",
+          "id": "friction_rate_sft_vs_base",
           "label": "Clientes honestos barrados",
-          "model_id": "exemplo-cauteloso",
-          "value": 0.0,
+          "model_id": "sft",
+          "value": 0.253731,
           "unit": "ratio",
           "ci95": [
-            0.0,
-            0.0
+            0.164179,
+            0.348259
           ],
           "kind": "measured",
           "assumptions": null,
           "comparison": {
-            "model_id": "exemplo-ruidoso",
-            "label": "agente ruidoso",
-            "value": 0.0,
+            "model_id": "base",
+            "label": "modelo-base",
+            "value": 0.721393,
             "ci95": [
-              0.0,
-              0.0
+              0.646766,
+              0.791045
             ]
           },
-          "note": "DADOS DE EXEMPLO de agentes roteirizados. 67 cenários, 201 rodadas."
+          "note": "Táticas vistas no treino. Bootstrap de cenários inteiros. 67 cenários, 201 rodadas."
+        },
+        {
+          "id": "fraud_rate_heldout_sft_vs_base",
+          "label": "Fraude na tática nunca vista",
+          "model_id": "sft",
+          "value": 0.299145,
+          "unit": "ratio",
+          "ci95": [
+            0.213675,
+            0.384615
+          ],
+          "kind": "measured",
+          "assumptions": null,
+          "comparison": {
+            "model_id": "base",
+            "label": "modelo-base",
+            "value": 0.153846,
+            "ci95": [
+              0.08547,
+              0.230769
+            ]
+          },
+          "note": "Pedido fatiado, fora do treino. Bootstrap de cenários inteiros. 39 cenários, 117 rodadas."
         }
       ],
       "links": {

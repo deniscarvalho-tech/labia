@@ -1,0 +1,88 @@
+{
+  "principal": [
+    {
+      "id": "H1",
+      "statement": "O SFT deixa passar menos fraude que o base nas táticas vistas no treino.",
+      "difference": 0.005,
+      "ci95": [
+        -0.0597,
+        0.0746
+      ],
+      "p_value": 0.5905,
+      "rejected_after_holm": false,
+      "n_pairs": 201,
+      "conclusion": "não confirmada: a diferença pode ser acaso"
+    },
+    {
+      "id": "H2",
+      "statement": "O atrito do SFT não passa o do base por mais de 5 p.p.",
+      "difference": -0.4677,
+      "ci95": [
+        -0.5672,
+        -0.3682
+      ],
+      "p_value": 0.0,
+      "rejected_after_holm": true,
+      "n_pairs": 201,
+      "conclusion": "confirmada: o atrito não piorou além da margem"
+    },
+    {
+      "id": "H3",
+      "statement": "O SFT deixa passar menos fraude que o base na tática nunca vista.",
+      "difference": 0.1453,
+      "ci95": [
+        0.0342,
+        0.2564
+      ],
+      "p_value": 0.9943,
+      "rejected_after_holm": false,
+      "n_pairs": 117,
+      "conclusion": "não confirmada: a fraude aumentou (o intervalo inteiro fica acima de zero)"
+    }
+  ],
+  "sensibilidade": [
+    {
+      "id": "H1",
+      "statement": "O SFT deixa passar menos fraude que o base nas táticas vistas no treino.",
+      "difference": 0.005,
+      "ci95": [
+        -0.0597,
+        0.0746
+      ],
+      "p_value": 0.5905,
+      "rejected_after_holm": false,
+      "n_pairs": 201,
+      "conclusion": "não confirmada: a diferença pode ser acaso"
+    },
+    {
+      "id": "H2",
+      "statement": "O atrito do SFT não passa o do base por mais de 5 p.p.",
+      "difference": -0.4821,
+      "ci95": [
+        -0.5846,
+        -0.3795
+      ],
+      "p_value": 0.0,
+      "rejected_after_holm": true,
+      "n_pairs": 195,
+      "conclusion": "confirmada: o atrito não piorou além da margem"
+    },
+    {
+      "id": "H3",
+      "statement": "O SFT deixa passar menos fraude que o base na tática nunca vista.",
+      "difference": 0.1453,
+      "ci95": [
+        0.0342,
+        0.2564
+      ],
+      "p_value": 0.9943,
+      "rejected_after_holm": false,
+      "n_pairs": 117,
+      "conclusion": "não confirmada: a fraude aumentou (o intervalo inteiro fica acima de zero)"
+    }
+  ],
+  "excluidos_na_sensibilidade": [
+    "bank-B3-med-pix-promessa-legitimo-163042",
+    "delivery-D5-cupom-atraso-promessa-legitimo-800566"
+  ]
+}

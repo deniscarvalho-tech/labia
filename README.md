@@ -2,7 +2,7 @@
 
 Treinei um LLM pequeno e aberto para não cair em engenharia social em português e medi o resultado em fraude, atrito com o cliente honesto, custo e latência.
 
-> **Status (11/11/2026): em construção.** O motor, o verificador e o painel estão prontos e testados; o dado de treino foi gerado e o treino roda no Kaggle. Nenhum resultado final foi publicado ainda. As hipóteses e o plano de análise foram registrados **antes de qualquer dado**, na tag [`pre-registro`](https://github.com/deniscarvalho-tech/labia/releases/tag/pre-registro).
+> **Status (11/11/2026): v0 avaliada.** O ajuste fino reduziu muito o atrito com o cliente honesto, mas não reduziu a fraude, e piorou a fraude na tática que ficou fora do treino (resultados abaixo). A ablação sem o filtro do verificador e a comparação com modelos de ponta pelas APIs ainda estão rodando. As hipóteses e o plano de análise foram registrados **antes de qualquer dado**, na tag [`pre-registro`](https://github.com/deniscarvalho-tech/labia/releases/tag/pre-registro); a análise de sensibilidade, antes de qualquer resultado, na tag [`sensibilidade`](https://github.com/deniscarvalho-tech/labia/releases/tag/sensibilidade).
 
 ## O problema
 
@@ -64,7 +64,76 @@ As empresas são fictícias: o **Banco Saracura** (regras B1 a B5) e o **Quati D
 ## Resultados
 
 <!-- RESULTADOS:INICIO -->
-A avaliação completa ainda não rodou. Esta seção é gerada pelo comando `labia report`, a partir de `results/*.json`: nenhum número dela é digitado à mão.
+Avaliação de `v0`, commit `100dae3`. Cada cenário rodou 3 vezes; os intervalos são de 95%, por bootstrap de cenários inteiros. Fonte: `results/metrics.json`.
+
+**Em resumo**, comparando Lábia v0 (SFT) com Qwen3-4B sem ajuste:
+
+- **Atrito nas táticas vistas no treino:** de 72,1% para 25,4% (diferença significativa).
+- **Fraude nas táticas vistas no treino:** de 16,9% para 17,4% (sem diferença significativa).
+- **Fraude na tática nunca vista (pedido fatiado):** de 15,4% para 29,9% (piorou: o intervalo da diferença fica inteiro acima de zero).
+- **Acerto nas 3 rodadas (pass^3), táticas vistas:** de 34,3% para 58,2% (exploratório).
+
+### Táticas vistas no treino
+
+| Modelo | Fraude que passou | IC 95% | Atrito | IC 95% | pass^3 | Cenários |
+|---|---|---|---|---|---|---|
+| Qwen3-4B sem ajuste | 16,9% | 10,9% a 23,4% | 72,1% | 64,7% a 79,1% | 34,3% | 134 |
+| Qwen3-4B + prompt reforçado | 14,9% | 8,5% a 22,4% | 65,7% | 58,2% a 73,1% | 40,3% | 134 |
+| Lábia v0 (SFT) | 17,4% | 11,4% a 23,4% | 25,4% | 16,4% a 34,8% | 58,2% | 134 |
+
+### Tática nunca vista (pedido fatiado)
+
+| Modelo | Fraude que passou | IC 95% | Atrito | IC 95% | pass^3 | Cenários |
+|---|---|---|---|---|---|---|
+| Qwen3-4B sem ajuste | 15,4% | 8,5% a 23,1% | 84,6% | 76,1% a 92,3% | 33,3% | 78 |
+| Qwen3-4B + prompt reforçado | 9,4% | 5,1% a 14,5% | 85,5% | 78,6% a 91,5% | 35,9% | 78 |
+| Lábia v0 (SFT) | 29,9% | 21,4% a 38,5% | 67,5% | 56,4% a 78,6% | 24,4% | 78 |
+
+### Hipóteses pré-registradas
+
+Diferença = SFT menos base, nos mesmos cenários e rodadas (bootstrap pareado, 10.000 reamostragens), com correção de Holm-Bonferroni.
+
+| | Hipótese | Diferença | IC 95% | p | Pares | Resultado |
+|---|---|---|---|---|---|---|
+| H1 | O SFT deixa passar menos fraude que o base nas táticas vistas no treino. | +0,5 p.p. | -6,0 a +7,5 p.p. | 0,5905 | 201 | não confirmada: a diferença pode ser acaso |
+| H2 | O atrito do SFT não passa o do base por mais de 5 p.p. | -46,8 p.p. | -56,7 a -36,8 p.p. | 0,0000 | 201 | confirmada: o atrito não piorou além da margem |
+| H3 | O SFT deixa passar menos fraude que o base na tática nunca vista. | +14,5 p.p. | +3,4 a +25,6 p.p. | 0,9943 | 117 | não confirmada: a fraude aumentou (o intervalo inteiro fica acima de zero) |
+
+#### Análise de sensibilidade
+
+As mesmas hipóteses sem os 2 cenários de gabarito contestável ([decisão 0008](docs/decisoes/0008-gabarito-contestavel.md)), definida antes de qualquer resultado.
+
+| | Hipótese | Diferença | IC 95% | p | Pares | Resultado |
+|---|---|---|---|---|---|---|
+| H1 | O SFT deixa passar menos fraude que o base nas táticas vistas no treino. | +0,5 p.p. | -6,0 a +7,5 p.p. | 0,5905 | 201 | não confirmada: a diferença pode ser acaso |
+| H2 | O atrito do SFT não passa o do base por mais de 5 p.p. | -48,2 p.p. | -58,5 a -38,0 p.p. | 0,0000 | 195 | confirmada: o atrito não piorou além da margem |
+| H3 | O SFT deixa passar menos fraude que o base na tática nunca vista. | +14,5 p.p. | +3,4 a +25,6 p.p. | 0,9943 | 117 | não confirmada: a fraude aumentou (o intervalo inteiro fica acima de zero) |
+
+### Custo e latência (estimados)
+
+| Modelo | Conversas por hora de GPU | US$ por mil conversas | Latência por turno (mediana) |
+|---|---|---|---|
+| Qwen3-4B sem ajuste | 296 | 1,18 | 19,5 s |
+| Qwen3-4B + prompt reforçado | 274 | 1,28 | 22,9 s |
+| Lábia v0 (SFT) | 442 | 0,79 | 14,2 s |
+
+Premissas: preço público da T4 (US$ 0,35 por hora, https://cloud.google.com/products/compute/gpus-pricing, consultado em 2026-11-11); A vazão do modelo próprio vem da avaliação: uma T4 dedicada ao agente, 8 conversas ao mesmo tempo, esperando o cliente simulado a cada turno. A capacidade real é igual ou maior. A latência foi medida com 8 conversas simultâneas na mesma GPU; não é a latência de um usuário sozinho. O custo da API usa os tokens medidos de cada conversa e o preço público por milhão de tokens, sem desconto de cache. O projeto não pagou nada: tudo rodou em camadas gratuitas. Fonte: `results/custo.json`.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/fraude-atrito-escuro.svg">
+  <img alt="Fraude que passou contra clientes honestos barrados, um ponto por modelo" src="docs/img/fraude-atrito-claro.svg">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/fraude-por-tatica-escuro.svg">
+  <img alt="Fraude que passou por tática, do modelo-base e do ajustado" src="docs/img/fraude-por-tatica-claro.svg">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/resistencia-escuro.svg">
+  <img alt="Fração dos golpes ainda resistidos a cada turno de insistência" src="docs/img/resistencia-claro.svg">
+</picture>
+
 <!-- RESULTADOS:FIM -->
 
 ### O que já foi medido (pilotos)
@@ -92,7 +161,28 @@ Lendo os erros do professor, também achei um defeito meu. Em seis variantes da 
 
 A primeira avaliação do modelo-base também revelou um defeito meu, desta vez no laço de conversa. O cliente simulado confirmava e se despedia na mesma mensagem ("sim, pode fazer o estorno [FIM]"), e o laço encerrava antes de o agente agir. Isso aconteceu em 85% das conversas. Corrigi o laço, guardei aquela avaliação como inválida e rodei de novo ([ADR 0009](docs/decisoes/0009-ultima-fala-do-cliente.md)).
 
-A análise completa dos modelos sai junto com os resultados.
+### O que o ajuste fino mudou, e o que não mudou
+
+Os números desta seção saem de [`scripts/analise_erros.py`](scripts/analise_erros.py) (fonte: [experiments/07-avaliacao/analise-de-erros.json](experiments/07-avaliacao/analise-de-erros.json)).
+
+**O modelo aprendeu a agir.** No modelo-base, 84 dos 192 clientes honestos negados foram vítimas do "anunciar sem executar". No modelo ajustado, os honestos negados caíram para 26, e só 6 com esse padrão. É daí que vem quase toda a queda do atrito.
+
+**O modelo não aprendeu a distinguir melhor o golpe.** Nas táticas vistas no treino, a fraude ficou onde estava. O que mudou foi o jeito de recusar: o modelo ajustado encerra 434 das 636 conversas transferindo para um humano, contra 140 do modelo-base. Ele herdou isso do professor. Parte do "golpe bloqueado" é, na prática, um problema passado adiante, o que numa operação real custa tempo de atendente.
+
+**Agir com mais facilidade abriu a porta do pedido fatiado.** Na tática que ficou fora do treino, o golpista pede pedaços pequenos que, somados, passam do limite. O modelo ajustado trata cada pedaço isoladamente:
+
+- 20 das fraudes que passaram são estornos de cortesia picados (regra B1);
+- 9 estouram o aumento de limite diário somado (B5);
+- 6 são reembolsos de itens que, juntos, passam do teto (D3).
+
+Ele aprendeu a executar, mas não a somar o que já concedeu na conversa.
+
+**A previsão registrada antes dos resultados se confirmou em parte.** O cliente honesto com promessa válida foi a pior tática para o modelo ajustado: 57,6% de atrito, contra 16,7% a 21,4% nas outras. Ainda assim, ele ficou abaixo do modelo-base nessa mesma célula, que barrou 84,8%.
+
+**Dois erros típicos, lidos nas conversas:**
+
+- **Regra aplicada pela metade.** O modelo consultou a tarifa e estornou R$ 59,90 como cortesia, acima do teto de R$ 50. Depois que o cliente agradeceu, escreveu "não é possível estornar essa tarifa", já tendo estornado.
+- **Regra trocada.** Num produto que não chegou (desacordo comercial, que pode ser contestado no chat), o modelo aplicou a regra da compra não reconhecida e transferiu o cliente honesto para a equipe de fraude.
 
 ## Decisões e trade-offs
 
@@ -109,6 +199,9 @@ As decisões importantes têm um registro curto cada, com contexto, opções e c
 - O dado de treino é desequilibrado. São 989 golpes bloqueados para 767 honestos atendidos, e só 64 exemplos ensinam a cumprir uma promessa válida, porque é onde o professor mais erra. Antes do resultado, registrei a previsão de que esse vai ser o ponto fraco do modelo ajustado ([ADR 0008](docs/decisoes/0008-gabarito-contestavel.md)).
 - 2 dos 212 cenários de teste têm gabarito contestável. Eles ficam na análise principal, e a análise de sensibilidade os exclui.
 - O professor às vezes vaza o próprio raciocínio, em inglês, na resposta ao cliente. Isso aparece em 1 das 1.756 conversas de treino.
+- O treino fez 1,33 época, com uma semente só. Não sei quanto do resultado muda com outra semente ou com 2 épocas completas.
+- A latência e a vazão foram medidas com 8 conversas simultâneas na mesma GPU, esperando o cliente simulado; não são números de produção.
+- O custo é estimado: o projeto rodou em camadas gratuitas, e o preço da GPU é o público, com fonte e data.
 - Dois setores no treino; o terceiro (varejo) fica para a avaliação de generalização da v1.2.
 
 ## Como rodar
@@ -124,8 +217,14 @@ O passo a passo completo, do zero até os notebooks no Kaggle, está em [docs/co
 
 ## Próximos passos
 
-- v0: geração, treino SFT, avaliação completa e publicação do modelo e do dataset no Hugging Face.
-- v1.1: DPO com pares "resposta melhor × pior" tirados do próprio verificador.
+- v0, para fechar:
+  - a ablação sem o filtro do verificador;
+  - a comparação com DeepSeek e Gemini pelas APIs;
+  - a publicação do modelo, do dataset e da demo no Hugging Face.
+- v1.1: DPO com pares "resposta melhor × pior" tirados do próprio verificador, mirando o que o SFT não resolveu:
+  - somar o que já foi concedido na conversa (pedido fatiado);
+  - transferir só quando a política manda;
+  - cumprir promessas válidas.
 - v1.2: o setor nunca visto (Loja Tamanduá) e golpes com prova falsa.
 - v1.3: auditoria contínua como GitHub Action e o modo "teste o seu agente".
 

@@ -1,90 +1,78 @@
 {
   "schema_version": "1.0.0",
-  "is_sample": true,
-  "generated_at": "2026-11-11T18:04:51.828087Z",
-  "git_sha": "50100d8",
+  "is_sample": false,
+  "generated_at": "2026-11-11T22:53:58.944110Z",
+  "git_sha": "100dae3",
   "release": "v0",
   "headline": [
     {
-      "id": "fraud_rate_exemplo",
+      "id": "fraud_rate_sft_vs_base",
       "label": "Fraude que passou",
-      "model_id": "exemplo-cauteloso",
-      "value": 0.223881,
+      "model_id": "sft",
+      "value": 0.174129,
       "unit": "ratio",
       "ci95": [
-        0.169154,
-        0.278607
+        0.114428,
+        0.233831
       ],
       "kind": "measured",
       "assumptions": null,
       "comparison": {
-        "model_id": "exemplo-ruidoso",
-        "label": "agente ruidoso",
-        "value": 0.656716,
+        "model_id": "base",
+        "label": "modelo-base",
+        "value": 0.169154,
         "ci95": [
-          0.577114,
-          0.731343
+          0.109453,
+          0.233831
         ]
       },
-      "note": "DADOS DE EXEMPLO de agentes roteirizados. 67 cenários, 201 rodadas."
+      "note": "Táticas vistas no treino. Bootstrap de cenários inteiros. 67 cenários, 201 rodadas."
     },
     {
-      "id": "friction_rate_exemplo",
+      "id": "friction_rate_sft_vs_base",
       "label": "Clientes honestos barrados",
-      "model_id": "exemplo-cauteloso",
-      "value": 0.0,
+      "model_id": "sft",
+      "value": 0.253731,
       "unit": "ratio",
       "ci95": [
-        0.0,
-        0.0
+        0.164179,
+        0.348259
       ],
       "kind": "measured",
       "assumptions": null,
       "comparison": {
-        "model_id": "exemplo-ruidoso",
-        "label": "agente ruidoso",
-        "value": 0.0,
+        "model_id": "base",
+        "label": "modelo-base",
+        "value": 0.721393,
         "ci95": [
-          0.0,
-          0.0
+          0.646766,
+          0.791045
         ]
       },
-      "note": "DADOS DE EXEMPLO de agentes roteirizados. 67 cenários, 201 rodadas."
+      "note": "Táticas vistas no treino. Bootstrap de cenários inteiros. 67 cenários, 201 rodadas."
     },
     {
-      "id": "fraud_rate_heldout_exemplo",
+      "id": "fraud_rate_heldout_sft_vs_base",
       "label": "Fraude na tática nunca vista",
-      "model_id": "exemplo-cauteloso",
-      "value": 0.083333,
+      "model_id": "sft",
+      "value": 0.299145,
       "unit": "ratio",
       "ci95": [
-        0.0,
-        0.194444
+        0.213675,
+        0.384615
       ],
       "kind": "measured",
       "assumptions": null,
       "comparison": {
-        "model_id": "exemplo-ruidoso",
-        "label": "agente ruidoso",
-        "value": 0.444444,
+        "model_id": "base",
+        "label": "modelo-base",
+        "value": 0.153846,
         "ci95": [
-          0.25,
-          0.638889
+          0.08547,
+          0.230769
         ]
       },
-      "note": "DADOS DE EXEMPLO de agentes roteirizados. 12 cenários, 36 rodadas."
-    },
-    {
-      "id": "cost_per_1k_exemplo",
-      "label": "Custo por mil conversas",
-      "model_id": "exemplo-cauteloso",
-      "value": 0.0,
-      "unit": "usd",
-      "ci95": null,
-      "kind": "estimated",
-      "assumptions": "Dado de exemplo: o custo real sai do benchmark de vazão na GPU, com o preço público da GPU por hora e a data da consulta.",
-      "comparison": null,
-      "note": "DADOS DE EXEMPLO de agentes roteirizados."
+      "note": "Pedido fatiado, fora do treino. Bootstrap de cenários inteiros. 39 cenários, 117 rodadas."
     }
   ]
 }

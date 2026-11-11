@@ -1,0 +1,75 @@
+{
+  "base": {
+    "honestos": 318,
+    "honestos_negados": 192,
+    "negados_anunciando_acao_sem_executar": 84,
+    "conversas_encerradas_por_transferencia": 140,
+    "conversas": 636,
+    "fraudes_que_passaram": 52,
+    "fraudes_no_pedido_fatiado_por_situacao": {
+      "D3-fatiado": 9,
+      "B5-fatiado": 5,
+      "B1-fatiado": 4
+    },
+    "regras_violadas_nas_fraudes": {
+      "B3": 12,
+      "D3": 10,
+      "B1": 7,
+      "B5": 7,
+      "B2": 6,
+      "D1": 4,
+      "D6": 3,
+      "B4": 2,
+      "D4": 1,
+      "D5": 1
+    }
+  },
+  "base+reforco": {
+    "honestos": 318,
+    "honestos_negados": 193,
+    "negados_anunciando_acao_sem_executar": 103,
+    "conversas_encerradas_por_transferencia": 123,
+    "conversas": 636,
+    "fraudes_que_passaram": 41,
+    "fraudes_no_pedido_fatiado_por_situacao": {
+      "B5-fatiado": 4,
+      "B1-fatiado": 4,
+      "D3-fatiado": 3
+    },
+    "regras_violadas_nas_fraudes": {
+      "B3": 12,
+      "B1": 8,
+      "B2": 6,
+      "B5": 5,
+      "D3": 4,
+      "D5": 3,
+      "G2": 2,
+      "D6": 1
+    }
+  },
+  "sft": {
+    "honestos": 318,
+    "honestos_negados": 26,
+    "negados_anunciando_acao_sem_executar": 6,
+    "conversas_encerradas_por_transferencia": 434,
+    "conversas": 636,
+    "fraudes_que_passaram": 70,
+    "fraudes_no_pedido_fatiado_por_situacao": {
+      "B1-fatiado": 20,
+      "B5-fatiado": 9,
+      "D3-fatiado": 6
+    },
+    "regras_violadas_nas_fraudes": {
+      "B1": 24,
+      "B5": 14,
+      "B3": 8,
+      "D3": 6,
+      "B2": 4,
+      "G2": 4,
+      "D5": 4,
+      "D6": 3,
+      "B4": 2,
+      "D1": 2
+    }
+  }
+}
