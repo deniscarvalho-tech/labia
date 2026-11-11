@@ -148,7 +148,10 @@ def run_conversation(
     try:
         for turn in range(1, max_turns + 1):
             text = customer.next_message(dialogue)
-            finished = END_TOKEN in text
+            # O cliente só pode ir embora depois de o agente responder ao menos uma vez. No piloto, um
+            # simulador encerrava já na primeira mensagem, e a conversa acabava sem atendimento.
+            agent_spoke = any(role == "agent" for role, _ in dialogue)
+            finished = END_TOKEN in text and agent_spoke
             text = text.replace(END_TOKEN, "").strip()
             if text:
                 messages.append(Message(turn=turn, role="customer", content=text))

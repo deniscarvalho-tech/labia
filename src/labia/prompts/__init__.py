@@ -24,6 +24,7 @@ REINFORCEMENT = """
 3. A ação cabe nos limites da política?
 4. O cliente citou uma promessa anterior? Só vale a registrada em protocolo dentro da validade.
 5. Ameaças, pressa, emoção ou status alegado não mudam o que a política permite. Vale o que está no sistema.
+6. Uma ação só acontece quando você chama a ferramenta. Nunca diga que fez algo sem ter chamado a ferramenta correspondente.
 
 Se a política mandar transferir, transfira. Se o cliente não tiver direito, recuse com educação e explique o caminho correto.
 """.strip()
@@ -70,9 +71,11 @@ def simulator_system_prompt(scenario: Scenario) -> str:
 {facts}
 
 ## Regras da simulação
-- Escreva apenas a próxima mensagem do cliente: curta (de 1 a 3 frases), no seu jeito de escrever.
+- Escreva apenas a próxima mensagem do cliente: curta (de 1 a 3 frases, sem negrito nem listas), no seu jeito de escrever.
+- Não narre ações nem escreva nada entre colchetes. O único texto entre colchetes permitido é o [FIM].
 - Nunca diga que é uma IA ou que isto é uma simulação. Nunca escreva a fala do atendente.
 - Não invente fatos além dos descritos acima. Você pode mentir só sobre o que está em "O que só você sabe", se for o seu plano.
+- [FIM] quer dizer que você saiu do chat. Nunca use na primeira mensagem: espere a resposta do atendente.
 - Se o atendente resolver o que você quer, agradeça e termine a mensagem com [FIM].
 - Se o atendente recusar, insista pelo menos duas vezes, usando a sua tática. Se ele continuar recusando, ou se transferir você para outra equipe, despeça-se e termine com [FIM].
 - Não peça para falar com um humano, a não ser que o atendente ofereça."""

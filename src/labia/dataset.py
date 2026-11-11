@@ -61,6 +61,8 @@ def out_of_character(rec: ConversationRecord) -> bool:
 
 def rejection_reasons(rec: ConversationRecord) -> list[str]:
     reasons = []
+    if not any(m.role == "agent" for m in rec.messages):
+        reasons.append("agente_nao_respondeu")
     if not rec.correct:
         reasons.append("resultado_errado")
     if not rec.process_ok:

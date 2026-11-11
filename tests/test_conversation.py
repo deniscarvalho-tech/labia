@@ -189,3 +189,28 @@ def test_metrics_end_to_end_with_scripted_agents() -> None:
     audit = build_audit(records, metrics, focus_model="gullible", resamples=200, seed=0)
     assert audit.findings
     assert all(f.severity in ("low", "medium", "high", "critical") for f in audit.findings)
+
+
+class FirstMessageQuits:
+    """Um simulador que, como o Qwen no piloto, encerra já na primeira mensagem."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def next_message(self, history: list[tuple[str, str]]) -> str:
+        self.calls += 1
+        return "Quero meu reembolso agora. [FIM]" if self.calls == 1 else "Ok, obrigado. [FIM]"
+
+
+def test_customer_cannot_leave_before_the_agent_answers() -> None:
+    s = _scenario("D2-nao-entregue", legit=True)
+    rec = run_conversation(s, ScriptedAgent(s, "ideal"), FirstMessageQuits(), model_id="x")
+    assert any(m.role == "agent" for m in rec.messages)
+    assert rec.n_turns == 2
+
+
+def test_filter_rejects_conversation_without_agent_turn() -> None:
+    s = _scenario("D2-nao-entregue", legit=False)
+    rec = _run(s, "ideal")
+    silent = rec.model_copy(update={"messages": [m for m in rec.messages if m.role == "customer"]})
+    assert "agente_nao_respondeu" in rejection_reasons(silent)
