@@ -118,4 +118,6 @@ Mostra quantas conversas passaram no filtro duplo e por que as outras foram repr
 | `ModuleNotFoundError: No module named 'six'` no kaggle | defeito da versão 2.2.5 | `uv tool install kaggle --with six --reinstall` |
 | erro de codificação ao instalar com Python 3.11 no Windows | o acento no nome da pasta | use o Python 3.13 (`.python-version` já pede) |
 | o notebook do Kaggle não liga GPU | telefone não verificado | Settings do Kaggle, verificação por telefone |
+| `Permission 'kernels.get' was denied` num notebook seu | o kaggle 2.2.5 não renova a credencial quando ela vence (a cada 12 h) e cai no modo anônimo | `& "$env:APPDATA\uv\tools\kaggle\Scripts\python.exe" scripts/kaggle_renovar_login.py` |
+| `Maximum batch GPU session count of 2 reached` | o Kaggle permite só 2 sessões de GPU ao mesmo tempo | espere uma terminar e envie de novo |
 | `make check` falha só no Windows por quebra de linha | arquivo gravado com CRLF | os geradores do projeto gravam LF; rode `make schemas` e `make scenarios` de novo |
