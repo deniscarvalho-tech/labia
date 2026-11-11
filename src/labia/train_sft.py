@@ -65,7 +65,10 @@ def main(argv: list[str] | None = None) -> None:  # pragma: no cover - precisa d
     p.add_argument("--grad-accum", type=int, default=8)
     p.add_argument("--time-budget-h", type=float, default=9.0)
     p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--limit", type=int, default=0, help="usa só os primeiros N exemplos (testes)")
+    p.add_argument("--limit", type=int, default=0, help="usa só N exemplos (testes de velocidade)")
+    p.add_argument(
+        "--longest", action="store_true", help="com --limit, usa os N mais longos (pior caso de memória)"
+    )
     args = p.parse_args(argv)
 
     import torch
@@ -133,9 +136,11 @@ def main(argv: list[str] | None = None) -> None:  # pragma: no cover - precisa d
 
     rows = load_examples(Path(args.data))
     random.Random(args.seed).shuffle(rows)
-    if args.limit:
-        rows = rows[: args.limit]
     encoded, data_stats = encode_all(tokenizer, rows, args.max_len)
+    if args.limit:
+        if args.longest:
+            encoded.sort(key=lambda e: len(e.input_ids), reverse=True)
+        encoded = encoded[: args.limit]
     if is_main:
         print(json.dumps(data_stats, ensure_ascii=False), flush=True)
 
@@ -169,15 +174,20 @@ def main(argv: list[str] | None = None) -> None:  # pragma: no cover - precisa d
                 control.should_training_stop = True
             return control
 
+    accum = max(1, args.grad_accum // world)
+    steps_per_epoch = max(1, len(encoded) // (accum * world))
+    total_steps = args.max_steps if args.max_steps > 0 else int(steps_per_epoch * args.epochs)
+    # warmup em passos inteiros: o transformers 5 removeu o warmup_ratio
+    warmup = max(1, int(0.03 * total_steps))
     training_args = TrainingArguments(
         output_dir=args.out,
         num_train_epochs=args.epochs,
         max_steps=args.max_steps,
         per_device_train_batch_size=1,
-        gradient_accumulation_steps=max(1, args.grad_accum // world),
+        gradient_accumulation_steps=accum,
         learning_rate=args.lr,
         lr_scheduler_type="cosine",
-        warmup_ratio=0.03,
+        warmup_steps=warmup,
         logging_steps=5,
         fp16=True,
         gradient_checkpointing=not args.unsloth and args.mode == "lora16",
@@ -199,7 +209,7 @@ def main(argv: list[str] | None = None) -> None:  # pragma: no cover - precisa d
     seconds = time.perf_counter() - t0
     steps = trainer.state.global_step
     seqs = steps * training_args.gradient_accumulation_steps * world
-    mean_len = data_stats["tokens_total"] / max(1, data_stats["exemplos"])
+    mean_len = sum(len(e.input_ids) for e in encoded) / max(1, len(encoded))
     if is_main:
         trainer.save_model(args.out)
         tokenizer.save_pretrained(args.out)

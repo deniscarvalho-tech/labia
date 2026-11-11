@@ -20,4 +20,6 @@ with KaggleClient() as client:
         raise SystemExit("nenhuma credencial salva: rode `kaggle auth login`")
     creds.refresh_access_token()
     creds.save()
-    print(f"credencial de {creds.get_username()} renovada; vale até {creds._access_token_expiration:%d/%m %H:%M} UTC")
+    print(
+        f"credencial de {creds.get_username()} renovada; vale até {creds._access_token_expiration:%d/%m %H:%M} UTC"
+    )
