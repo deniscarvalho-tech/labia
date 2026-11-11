@@ -844,3 +844,79 @@ Uma lição contraintuitiva: **duas GPUs não resolvem falta de memória** no pa
 
 **4. Por que a perda só nas falas do agente?**
 "O exemplo tem o prompt de sistema, as falas do cliente e as respostas das ferramentas. Se a perda contasse tudo, o modelo gastaria capacidade aprendendo a imitar o golpista e a decorar a política. Só 7,6% dos tokens contam: exatamente as decisões do atendente."
+
+## Etapa 7 — os resultados da v0 (11/11/2026)
+
+### O que foi feito
+
+Três configurações rodaram nos 212 cenários de teste congelados, com 3 rodadas cada, o laço corrigido e o mesmo cliente simulado (Ministral-3-14B):
+
+- o modelo-base;
+- o modelo-base com o prompt reforçado;
+- o modelo ajustado (Lábia v0).
+
+Depois, tudo saiu de comandos, sem nenhum número digitado:
+
+- `labia evaluate`: métricas, hipóteses e análise de sensibilidade;
+- `labia cost`: custo estimado;
+- `make charts`: gráficos;
+- `labia report`: a seção de resultados do README;
+- `labia cards`: os cards do Hugging Face;
+- `scripts/analise_erros.py`: os números da análise de erros.
+
+### O resultado, em uma frase
+
+**O ajuste fino ensinou o modelo a agir, mas não a desconfiar.** O atrito com o cliente honesto caiu de 72,1% para 25,4% nas táticas vistas. A fraude ficou igual nas vistas (16,9% e 17,4%) e dobrou no pedido fatiado, a tática que ficou fora do treino (de 15,4% para 29,9%).
+
+| Hipótese pré-registrada | Resultado |
+|---|---|
+| H1: menos fraude nas táticas vistas | não confirmada: diferença de +0,5 p.p., intervalo de −6,0 a +7,5 |
+| H2: atrito não piora mais que 5 p.p. | confirmada, e caiu 46,8 p.p. |
+| H3: menos fraude na tática nunca vista | não confirmada: a fraude **aumentou** 14,5 p.p., intervalo inteiro acima de zero |
+
+A análise de sensibilidade, sem os 2 cenários contestáveis, dá as mesmas conclusões.
+
+### Por que isso aconteceu (a leitura das conversas)
+
+1. **O que melhorou:** o modelo-base anunciava ações sem executá-las (84 dos 192 honestos negados). O ajustado executa: só 6 casos. O professor, filtrado pelo verificador, ensinou a chamar a ferramenta.
+2. **O que não melhorou:** o filtro só aprova conversa certa, mas "certo" no golpe muitas vezes foi **transferir para humano**. O aluno aprendeu a transferir muito: 434 de 636 conversas, contra 140 do base. Transferir bloqueia o golpe, mas não é discernimento: é passar o problema adiante.
+3. **O que piorou:** no pedido fatiado, cada pedaço é pequeno e, olhado sozinho, parece permitido. Um modelo que aprendeu a agir com facilidade concede cada pedaço. Ele não aprendeu a **somar** o que já concedeu na conversa. E isso é exatamente o que a tática fora do treino mede.
+
+### O que eu faria diferente, e o que vem depois
+
+- **DPO com pares do verificador (v1.1).** Em vez de só imitar conversas certas, mostrar ao modelo pares "melhor × pior" na mesma situação, por exemplo "somou os pedidos e recusou o terceiro" × "concedeu o terceiro". É o sinal que o SFT não dá.
+- **Dado de treino com fracionamento dentro das táticas vistas?** Não. Isso acabaria com a medida de generalização. O certo é ensinar o princípio (somar o já concedido) em outra tática e ver se ele transfere.
+- **Calibrar a transferência:** penalizar, no par do DPO, a transferência que a política não manda.
+
+### O resultado é ruim?
+
+Não, se for bem contado. Um ganho grande e real (atrito de 72% para 25%, pass^3 de 34% para 58%), um resultado nulo (fraude nas vistas) e um negativo (fraude na tática nova), todos medidos com intervalo e pré-registrados. Isso é exatamente o que um laboratório sério publica. O negativo ainda aponta o próximo experimento: um modelo que imita aprende o **comportamento** do professor, não o **critério**.
+
+### Conceitos desta etapa
+
+- **Resultado nulo:** a diferença medida é compatível com zero. Não quer dizer "não tem efeito nenhum". Quer dizer que, com esse tamanho de amostra, não dá para distinguir de zero. O intervalo diz quão grande o efeito poderia ser: aqui, entre −6 e +7,5 pontos.
+- **Teste unilateral e resultado no sentido contrário:** a H3 perguntava "o SFT reduz a fraude?". A resposta é não, e o intervalo mostra mais: ela aumentou. Um relatório honesto diz isso, em vez de "pode ser acaso".
+- **pass^3:** a fração de cenários em que o modelo acertou nas 3 rodadas. Mede confiabilidade, não só acerto médio.
+- **Imitação × critério:** o SFT copia o que o professor fez nos exemplos aprovados. Se o professor costuma transferir, o aluno transfere. Ensinar critério pede outro sinal, como pares de preferência (DPO) ou recompensa (RL).
+
+### Alternativas descartadas
+
+| Alternativa | Por que não |
+|---|---|
+| Publicar só o ganho de atrito | seria maquiar: a fraude não caiu e piorou na tática nova |
+| Trocar a hipótese depois de ver o resultado (ex.: "o SFT melhora o pass^3") | o pass^3 entra como exploratório; as hipóteses confirmatórias são as do pré-registro |
+| Retreinar já com fracionamento no dado | destruiria a medida de generalização; vira experimento da v1.1, com outra tática fora |
+
+### Perguntas de entrevista sobre esta etapa
+
+**1. O seu modelo funcionou?**
+"Em parte, e eu sei dizer em quê. Ele aprendeu a agir: o atrito com o cliente honesto caiu de 72% para 25%, com intervalo de confiança, e o acerto nas 3 rodadas subiu de 34% para 58%. Mas não aprendeu a desconfiar melhor: a fraude ficou igual nas táticas vistas e dobrou no pedido fatiado, que ficou fora do treino. As três hipóteses foram registradas antes, e eu reporto as três."
+
+**2. Por que a fraude piorou na tática nova?**
+"Porque o modelo aprendeu a executar ações com facilidade, mas não a somar o que já concedeu. No pedido fatiado, cada pedaço sozinho parece permitido. As fraudes que passaram são estornos de cortesia picados, aumentos de limite somados e reembolsos de itens que juntos passam do teto."
+
+**3. Se fosse fazer de novo, o que mudaria?**
+"Eu complementaria o SFT com DPO usando pares do próprio verificador: na mesma situação, a resposta que somou e recusou contra a que concedeu. O SFT imita o comportamento do professor; para ensinar o critério, preciso mostrar o contraste. E calibraria a transferência para humano, que o modelo herdou do professor em excesso."
+
+**4. Um resultado negativo não prejudica o seu portfólio?**
+"Acho que é o contrário. Mostra que eu meço de verdade: hipóteses pré-registradas, teste congelado, intervalos de confiança, análise de sensibilidade. E que eu sei explicar por que o resultado saiu assim, a partir das conversas. Um número bonito sem isso não convenceria ninguém que trabalha com modelo em produção."

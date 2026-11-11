@@ -4,7 +4,7 @@
 
 Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle · **[pronto p/ rodar]** construído, esperando a vez · **[falta]** ainda não feito · **[você]** depende de você.
 
-Última atualização: 11/11/2026, 18h.
+Última atualização: 11/11/2026, 20h30.
 
 ## 1. Pesquisa e rigor
 
@@ -60,10 +60,10 @@ Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle �
 | 03. Teste de velocidade | [pronto, falhou] | incompatibilidade de versões | virou uma sonda automática dentro do treino |
 | 04. Geração do dado de treino (2 fatias) | [pronto] | 1.756 conversas aprovadas de 2.010 cenários, 8,5 h de GPU | é o dado de treino |
 | 05. Avaliação do modelo-base, versão 1 | [pronto, inválido] | 85% das conversas com a última fala do cliente descartada | achou o defeito do laço (ADR 0009) |
-| 05. Avaliação do modelo-base, versão 2 (laço corrigido) | [rodando] desde 15h15 | — | a linha de base: sem ela não dá para dizer que o treino melhorou |
+| 05. Avaliação do modelo-base, versão 2 (laço corrigido) | [pronto] 4,6 h | fraude 16,9% e atrito 72,1% nas táticas vistas | a linha de base |
 | 06. Treino SFT | [pronto] | Unsloth QLoRA numa GPU (as outras configurações estouraram a memória); 1,33 época em 4,2 h; perda de 1,48 para 0,35 | o modelo Lábia v0 (ADR 0010) |
 | 06. Treino da ablação, sem o filtro | [pronto p/ rodar] com a configuração idêntica; espera vaga e cota | — | responde "o filtro do verificador faz diferença?" |
-| 07. Avaliação do modelo ajustado | [pronto] 1,45 h | esperando a do base para comparar | as hipóteses H1 a H3 |
+| 07. Avaliação do modelo ajustado | [pronto] 1,45 h | atrito caiu para 25,4% (H2 confirmada); fraude igual nas vistas (H1 não); fraude dobrou no pedido fatiado (H3 não, piorou) | o resultado principal da v0 |
 | 07. Avaliação da ablação | [pronto p/ rodar] depois do treino dela | — | o efeito do filtro |
 | 09. O modelo ajustado na CPU (latência da demo, 4 × 8 bits) | [pronto] só CPU (não gasta cota) | funciona de ponta a ponta; com o estado pré-aquecido, a 1ª resposta cai de 217 s para 12 s | garante que a demo ao vivo funciona e é usável |
 | 08. Avaliação pelas APIs (DeepSeek, Gemini) | [pronto p/ rodar] [você] faltam as chaves | — | compara o modelo pequeno com modelos grandes |
@@ -82,10 +82,10 @@ Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle �
 
 | Item | Estado | Por que importa |
 |---|---|---|
-| README no formato de relatório técnico | [pronto] parcial; resultados entram por script | a vitrine do projeto |
+| README no formato de relatório técnico | [pronto] com resultados, gráficos, custo e análise de erros, tudo por script | a vitrine do projeto |
 | `experiments/`: o resumo de cada execução | [pronto] | todo número publicado tem fonte |
 | Como rodar, mapa do código | [pronto] | reprodutibilidade |
-| Diário de aprendizados (etapas 1 a 6), glossário, explicação prática | [pronto] | estudo para a entrevista |
+| Diário de aprendizados (etapas 1 a 7), glossário, explicação prática | [pronto] | estudo para a entrevista |
 | Revisão do português do professor | [você] | último critério da escolha do professor |
 
 ## 7. Pendências que dependem de você

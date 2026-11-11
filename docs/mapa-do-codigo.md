@@ -43,7 +43,7 @@ flowchart LR
 | `data/` | Os cenários gerados e as conversas das rodadas. Fica **fora do git** (é grande e é regenerável); vai para o Hugging Face. |
 | `experiments/` | O resumo de cada execução no Kaggle (piloto, geração, treino, avaliação), como saiu do notebook ou do script de análise. |
 | `space/` | A demo do Hugging Face Spaces: replay lado a lado e o modo "tente enganar o agente". |
-| `scripts/` | Utilitários: renovar a credencial do Kaggle e publicar no Hugging Face. |
+| `scripts/` | Utilitários: renovar a credencial do Kaggle, publicar no Hugging Face, desenhar os gráficos do README (`graficos.py`) e contar os números da análise de erros (`analise_erros.py`). |
 | `.github/workflows/` | A CI: varredura de segredos e testes em Python 3.11 e 3.13. |
 
 ## Arquivos, um por um
@@ -107,6 +107,8 @@ A função `assess_goal` faz o **teste cruzado**: julga as ações que o cliente
 | `dataset.py` | O filtro duplo e a exportação para o treino, com destilação de contexto. |
 | `generation_report.py` | O raio-x da geração: onde o professor acerta e erra, o padrão "anunciou sem executar" e a composição do dado de treino (`labia generation-report`). |
 | `report.py` | As hipóteses pré-registradas, a análise de sensibilidade e a seção de resultados do README (`labia evaluate` e `labia report`). |
+| `costs.py` | O custo estimado por mil conversas e o ponto de equilíbrio entre GPU própria e API (`labia cost`). |
+| `local_llm.py` | O modelo em GGUF na CPU com llama.cpp, para a demo: monta o prompt pelo template do Qwen, lê as chamadas de ferramenta do texto e guarda o estado pré-aquecido de cada cenário. |
 | `cards.py` | O model card e o dataset card do Hugging Face, montados dos arquivos de resultado (`labia cards`). Recusa dado de exemplo. |
 | `train_sft.py`, `training.py` | O treino com LoRA: tokeniza as conversas, calcula a perda só nas respostas do agente e grava `treino.json` com o que mediu. |
 
