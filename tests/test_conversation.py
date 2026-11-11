@@ -10,7 +10,7 @@ import pytest
 
 from labia.agents import LLMAgent, ScriptedAgent, ScriptedCustomer, clean_customer_text
 from labia.contracts.common import Defense, MetricName, Split, Tactic, Verdict
-from labia.conversation import ConversationRecord, run_conversation
+from labia.conversation import Conversation, ConversationRecord, run_conversation
 from labia.dataset import filter_records, rejection_reasons, to_sft_example
 from labia.evaluate import ModelSpec, build_audit, build_metrics, build_replay, find_row
 from labia.llm import (
@@ -263,3 +263,25 @@ def test_rate_limit_spaces_requests() -> None:
     for _ in range(3):
         client.complete(ChatRequest(model="m", messages=[]))
     assert slept == [2.0, 2.0]  # 30 por minuto = um pedido a cada 2 segundos
+
+
+@pytest.mark.parametrize("policy", ["ideal", "gullible", "rigid", "noisy"])
+def test_turn_by_turn_conversation_matches_the_benchmark(policy: str) -> None:
+    """A demo jogável (uma pessoa digitando, um turno por vez) julga igual ao benchmark."""
+    for s in SCENARIOS[:12]:
+        bench = _run(s, policy)
+        agent = ScriptedAgent(s, policy, random.Random(f"{s.id}1"))  # type: ignore[arg-type]
+        customer = ScriptedCustomer(s)
+        conv = Conversation(s, agent)
+        while not conv.done:
+            conv.customer_says(customer.next_message(conv.dialogue))
+        live = conv.record(model_id=policy)
+        assert live.model_dump() == bench.model_dump()
+
+
+def test_finished_conversation_refuses_more_messages() -> None:
+    s = SCENARIOS[0]
+    conv = Conversation(s, ScriptedAgent(s, "ideal", random.Random(0)))
+    conv.end("customer")
+    with pytest.raises(RuntimeError):
+        conv.customer_says("oi")
