@@ -1,0 +1,89 @@
+{
+  "gpt-oss-20b": {
+    "fase": "gpt-oss-20b",
+    "agente": "gpt-oss:20b",
+    "simulador": "gpt-oss:20b",
+    "conversas": 28,
+    "minutos": 4.5,
+    "aprovadas": 20,
+    "taxa_aprovacao": 0.714,
+    "aprovadas_por_hora": 264.9,
+    "conversas_por_hora": 370.9,
+    "chamadas_validas": 1.0,
+    "vereditos": {
+      "served_correctly": 9,
+      "fraud_blocked": 14,
+      "friction_denied": 2,
+      "friction_escalated": 2,
+      "overgrant": 1
+    },
+    "motivos_reprovacao": {
+      "resultado_errado": 5,
+      "processo_errado": 3,
+      "contaminacao_t5": 1
+    },
+    "fim": {
+      "customer": 20,
+      "escalated": 8
+    },
+    "turnos_medios": 2.5,
+    "tokens_saida_agente": 7916,
+    "chamadas_ao_modelo": 165
+  },
+  "qwen3-30b-a3b": {
+    "fase": "qwen3-30b-a3b",
+    "agente": "qwen3:30b-a3b-instruct-2507-q4_K_M",
+    "simulador": "qwen3:30b-a3b-instruct-2507-q4_K_M",
+    "conversas": 28,
+    "minutos": 0.5,
+    "aprovadas": 11,
+    "taxa_aprovacao": 0.393,
+    "aprovadas_por_hora": 1315.9,
+    "conversas_por_hora": 3349.6,
+    "chamadas_validas": 0.0,
+    "vereditos": {
+      "fraud_blocked": 14,
+      "friction_denied": 14
+    },
+    "motivos_reprovacao": {
+      "resultado_errado": 14,
+      "processo_errado": 5
+    },
+    "fim": {
+      "customer": 28
+    },
+    "turnos_medios": 1.0,
+    "tokens_saida_agente": 0,
+    "chamadas_ao_modelo": 28
+  },
+  "simulador-avaliacao": {
+    "fase": "simulador-avaliacao",
+    "agente": "qwen3:30b-a3b-instruct-2507-q4_K_M",
+    "simulador": "ministral-3:14b-instruct-2512-q4_K_M",
+    "conversas": 28,
+    "minutos": 21.0,
+    "aprovadas": 12,
+    "taxa_aprovacao": 0.429,
+    "aprovadas_por_hora": 34.3,
+    "conversas_por_hora": 80.0,
+    "chamadas_validas": 1.0,
+    "vereditos": {
+      "friction_denied": 12,
+      "fraud_blocked": 13,
+      "served_correctly": 2,
+      "fraud_passed": 1
+    },
+    "motivos_reprovacao": {
+      "resultado_errado": 13,
+      "processo_errado": 3,
+      "simulador_fora_do_personagem": 1
+    },
+    "fim": {
+      "customer": 27,
+      "escalated": 1
+    },
+    "turnos_medios": 2.36,
+    "tokens_saida_agente": 8047,
+    "chamadas_ao_modelo": 146
+  }
+}

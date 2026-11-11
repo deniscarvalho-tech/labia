@@ -546,3 +546,85 @@ Cada resposta de modelo fica guardada em disco, com a chave calculada a partir d
 
 **5. O que você fez para não gastar GPU à toa?**
 "Cache em disco de toda resposta, teto de chamadas por rodada, runner retomável que grava cada conversa ao terminar, tolerância a erro por conversa, e um piloto com 28 cenários antes de qualquer geração em escala. E testei o pipeline inteiro sem GPU, com agentes roteirizados, antes de mandar qualquer coisa para o Kaggle."
+
+---
+
+## Etapa 3 — os pilotos no Kaggle: o que só aparece rodando de verdade (10 e 11/11/2026)
+
+### O que foi feito
+
+Quatro execuções curtas no Kaggle antes de gastar horas de GPU, cada uma com o resumo versionado em [experiments/](../experiments/README.md):
+
+1. **Piloto do professor** (duas versões): os dois candidatos nos mesmos 28 cenários. Vencedor pela regra: **gpt-oss-20b** ([ADR 0007](decisoes/0007-professor-gpt-oss.md)).
+2. **Teste do treino:** o aluno treina numa T4, mas devagar.
+3. **Teste de velocidade:** falhou por versões de biblioteca e virou uma sonda automática dentro do notebook de treino.
+
+E a geração em escala começou: duas fatias dos 2.010 cenários de treino, uma em cada sessão.
+
+### Os problemas que os pilotos pegaram
+
+Cada um destes teria custado horas se aparecesse no meio da geração ou do treino.
+
+#### 1. O cliente que ia embora antes de ser atendido
+
+O Qwen, fazendo o papel de cliente, terminava a **primeira** mensagem com `[FIM]` (o marcador de "saí do chat"). O laço aceitava e encerrava a conversa antes de o agente falar. Resultado: golpes "bloqueados" sem atendente nenhum, e o filtro **aprovava** essas conversas.
+
+Correções: o `[FIM]` só vale depois da primeira resposta do agente; o filtro reprova conversa sem fala do agente; o prompt do simulador explica melhor o `[FIM]`.
+
+**A lição:** um número bom demais (o Qwen "bloqueou" 100% dos golpes) pede leitura das conversas, não comemoração.
+
+#### 2. O agente que diz que fez, mas não faz
+
+O erro mais comum do atendente, nos dois modelos: escrever "Desbloqueio em andamento ✅" ou "a contestação está sendo aberta agora" **sem chamar a ferramenta**. No sistema, nada aconteceu, e o cliente honesto sai sem o que tinha direito.
+
+O verificador julgou certo (cliente barrado), porque ele olha **ações**, não texto. Um avaliador que lesse só a resposta teria dado nota alta. É o argumento mais forte do projeto a favor de julgar por ações.
+
+O prompt reforçado ganhou um item: "uma ação só acontece quando você chama a ferramenta".
+
+#### 3. Dois modelos se revezando na GPU
+
+Na fase do simulador da avaliação, o Qwen (19 GB) e o Ministral (9 GB) não cabiam juntos nas duas T4. O servidor ficava tirando um e carregando o outro, a cada minuto ou dois. O log mostrou a mesma linha "loading model" alternando entre os dois. A vazão caiu para 86 conversas por hora.
+
+**Analogia:** uma cozinha com uma bancada só, onde dois cozinheiros precisam tirar todas as coisas do outro antes de começar a sua receita.
+
+Correção: na avaliação há **dois servidores, um por GPU**. O agente fica sempre na GPU 0 e o simulador sempre na GPU 1.
+
+#### 4. O treino lento demais
+
+O aluno treina numa T4 com QLoRA (pico de 11,2 GB de memória), mas a **154 tokens por segundo**. Com mil e poucas conversas de 3 mil tokens, uma passada pelos dados levaria 6,5 horas.
+
+As alternativas (LoRA em 16 bits, as duas GPUs, Unsloth) falharam todas no teste por dois detalhes de versão: o `transformers` 5 removeu o parâmetro `warmup_ratio`, e uma biblioteca antiga (`torchao` 0.10) no ambiente do Kaggle quebra o LoRA em 16 bits. Em vez de esperar outra vaga de GPU para refazer o teste, o notebook de treino passou a **medir e escolher sozinho**: roda 3 passos de cada configuração com as 16 conversas mais longas (o pior caso de memória) e fica com a mais rápida.
+
+#### 5. Limites do Kaggle que só aparecem usando
+
+- No máximo **2 sessões de GPU ao mesmo tempo**. Um orquestrador espera uma vaga abrir e lança o próximo notebook.
+- O cliente do Kaggle (versão 2.2.5) **não renova a credencial** quando ela vence, a cada 12 horas, e cai no modo anônimo. O utilitário `scripts/kaggle_renovar_login.py` renova, e o orquestrador o chama a cada 50 minutos.
+
+### Conceitos desta etapa
+
+- **Amostragem por rejeição:** gerar várias tentativas e ficar só com as que passam num teste. Aqui, cada cenário roda uma vez; os reprovados ganham nova tentativa com outra semente. Como uma prova em que o aluno pode refazer a questão errada, e só as respostas certas entram no gabarito comentado.
+- **Paralelismo de dados:** duas GPUs, cada uma com uma cópia do modelo, processando metade das conversas do lote; no fim de cada passo, elas combinam o que aprenderam. Dobra a vazão, não a memória disponível (essa é outra técnica, a de pipeline, da etapa 1).
+- **Época:** uma passada completa pelo dado de treino. Duas épocas são duas passadas.
+- **Fundir o adaptador (merge):** somar as matrizes pequenas do LoRA aos pesos originais. O resultado é um modelo único, que não depende mais do adaptador para rodar.
+
+### Alternativas descartadas
+
+| Alternativa | Por que não |
+|---|---|
+| Escolher o professor pela impressão de ler algumas conversas | a regra foi escrita antes do piloto, justamente para a escolha não depender de gosto |
+| Repetir o teste de velocidade numa vaga própria | custaria 3 a 4 horas de espera pela vaga; a sonda dentro do treino resolve no mesmo lugar |
+| Um servidor só para agente e simulador | o piloto mediu o custo: troca de modelos a cada minuto |
+
+### Perguntas de entrevista sobre esta etapa
+
+**1. Por que rodar um piloto antes de gerar os dados?**
+"Porque o piloto pegou quatro problemas que custariam horas de GPU: um simulador que encerrava a conversa antes do atendimento, dois modelos se revezando na GPU, um treino lento demais e incompatibilidades de versão. Cada um apareceu em execuções de minutos, não no meio de uma geração de horas."
+
+**2. Como você escolheu o modelo professor?**
+"Por uma regra escrita antes de rodar: mais conversas aprovadas por hora de GPU, com pelo menos 95% de chamadas válidas e português aprovado numa revisão humana. O gpt-oss-20b ganhou com 274 aprovadas por hora contra 243, e 75% de aprovação contra 54%. Eu deixo registrado que, com 28 conversas, a diferença de vazão é pequena perto da incerteza."
+
+**3. Qual o erro mais interessante que você viu nos modelos?**
+"O agente anunciar uma ação sem executá-la: escrever 'desbloqueio em andamento' sem chamar a ferramenta. A resposta soa certa e o resultado é errado. É o motivo de eu julgar por ações, com um verificador determinístico, e não pelo texto, com um LLM juiz."
+
+**4. Seu primeiro piloto deu 100% de golpes bloqueados num dos modelos. Por que você não comemorou?**
+"Porque número bom demais pede leitura. As conversas mostraram que o cliente simulado ia embora na primeira mensagem, antes de o agente responder. Corrigi o laço e o filtro, descartei aquele piloto e rodei de novo. O piloto inválido continua versionado, para registro."

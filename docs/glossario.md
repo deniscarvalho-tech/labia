@@ -8,9 +8,11 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **Agente roteirizado.** Um agente de regras fixas (não é um modelo), usado para testar o pipeline sem GPU e gerar dados de exemplo. Ex.: o 'crédulo' faz tudo o que o cliente pede.
 - **Alçada.** O limite do que uma pessoa ou um sistema pode aprovar sozinho. Acima dele, é preciso outra aprovação.
 - **Aluno.** O modelo pequeno que aprende imitando o professor. No nosso caso, o Qwen3-4B.
+- **Amostragem por rejeição.** Gerar várias tentativas e ficar só com as que passam num teste. Aqui, os cenários reprovados ganham nova tentativa com outra semente.
 - **Apache 2.0.** Licença permissiva: permite usar, modificar e redistribuir, inclusive para fins comerciais.
 - **API.** Interface para um programa usar outro. Aqui, é o jeito de chamar modelos pela internet (pela OpenRouter, por exemplo).
 - **Atrito.** Quando o cliente honesto não recebe o que tinha direito: foi negado ou transferido sem necessidade. A taxa de atrito é a porcentagem das conversas legítimas que tiveram atrito.
+- **Ação anunciada sem execução.** Quando o agente diz que fez algo ('desbloqueio em andamento') sem chamar a ferramenta. Para o sistema, nada aconteceu. Foi o erro mais comum nos pilotos.
 - **Baseline (linha de base).** O ponto de comparação de um resultado.
 - **bfloat16 e float16.** Dois formatos de número de 16 bits usados no treino. O bfloat16 aguenta números maiores; a GPU T4 só tem suporte nativo ao float16.
 - **Bootstrap.** Técnica que estima a incerteza de uma métrica sorteando, com reposição, novas amostras a partir dos dados que temos.
@@ -37,6 +39,7 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **Fracionamento.** Dividir um pedido em partes menores para cada uma ficar abaixo do limite. Em auditoria, é um sinal clássico de fraude ("fugir da alçada").
 - **Fraude que passou (taxa de fraude).** A porcentagem das conversas de golpe em que o agente executou uma ação proibida.
 - **Fronteira de Pareto.** No gráfico fraude × atrito, o conjunto dos modelos que não perdem para nenhum outro nas duas métricas ao mesmo tempo.
+- **Fundir o adaptador (merge).** Somar as matrizes do LoRA aos pesos originais, formando um modelo único que não depende mais do adaptador.
 - **GGUF.** Formato de arquivo de modelo usado pelo llama.cpp, em geral quantizado, para rodar em CPU.
 - **GPU.** A placa de vídeo. Faz as contas de treino e de inferência muito mais rápido que a CPU.
 - **Harness.** O código que roda as conversas e coleta os resultados, igual para todos os modelos avaliados.
@@ -69,6 +72,7 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **OWASP.** Organização aberta de segurança de software, conhecida pelas listas "Top 10" de riscos.
 - **p.p. (pontos percentuais).** A diferença entre duas porcentagens. De 10% para 15% são 5 p.p., o que equivale a um aumento relativo de 50%.
 - **Par mínimo.** Dois cenários iguais, exceto no fato que decide a resposta certa.
+- **Paralelismo de dados.** Cada GPU tem uma cópia do modelo e processa parte do lote; no fim do passo, as GPUs combinam o que aprenderam. Dobra a vazão, não a memória.
 - **Paralelismo de pipeline.** Dividir as camadas de um modelo entre várias GPUs: as primeiras camadas numa placa, as seguintes na outra. Permite rodar um modelo maior que a memória de uma placa só, mas as placas se revezam em vez de trabalharem juntas no mesmo dado.
 - **pass^k.** A fração de cenários em que o agente acerta todas as k tentativas.
 - **Piloto (rodada piloto).** Uma rodada pequena para medir custo, qualidade e problemas antes de gastar em escala.
@@ -93,6 +97,7 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **Teste cruzado.** Teste em que duas peças escritas separadamente precisam concordar: aqui, o gerador de cenários e o verificador.
 - **Tipagem estática (mypy).** Conferência automática de que cada variável e cada função recebem o tipo de dado esperado, antes de rodar o código.
 - **Token de acesso e token de atualização (*access* e *refresh token*).** No OAuth, o token de acesso é o que autoriza cada requisição e vence em horas; o token de atualização não acessa nada, só serve para obter um token de acesso novo. Separá-los limita o estrago de um vazamento e permite cancelar um programa sem trocar a senha.
+- **Troca de modelos na GPU.** Quando dois modelos não cabem juntos e o servidor fica tirando um e carregando o outro. Derruba a vazão; o piloto mostrou isso no log do Ollama.
 - **Tática.** O jeito de pedir usado pelo cliente: autoridade, ameaça, urgência, promessa ou fracionamento.
 - **Termos de teste (*trial*).** Condições de um acesso gratuito de avaliação. Os da NVIDIA permitem só "teste e avaliação internos", por isso ela não gera dados de treino neste projeto.
 - **Teste de fumaça.** Teste rápido e raso para ver se as peças funcionam juntas antes do trabalho de verdade. O nome vem da eletrônica: liga e vê se sai fumaça.
@@ -106,3 +111,4 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **VRAM.** A memória da própria GPU, separada da memória do computador (a RAM). Não se soma entre placas: duas GPUs de 14,6 GB são dois espaços de 14,6 GB, e não um de 29 GB.
 - **W&B (Weights & Biases).** Ferramenta para registrar experimentos de treino: métricas, configurações e gráficos.
 - **ZeroGPU.** GPU gratuita e compartilhada para demos no Hugging Face. Contas gratuitas com mais de 30 dias podem hospedar até 2 Spaces com ela.
+- **Época.** Uma passada completa pelo dado de treino.

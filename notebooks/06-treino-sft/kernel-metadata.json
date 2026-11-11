@@ -1,0 +1,15 @@
+{
+  "id": "deniscarvalhotech/labia-06-treino-sft",
+  "title": "Labia 06 - treino sft",
+  "code_file": "treino.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": ["deniscarvalhotech/labia-04-geracao-fatia-1", "deniscarvalhotech/labia-04-geracao-fatia-2"],
+  "model_sources": []
+}

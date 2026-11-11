@@ -23,5 +23,6 @@ Todo ADR tem o mesmo formato:
 | [0004](0004-divisao-anti-vazamento.md) | Divisão por cenário e fracionamento como tática fora do treino | aceita |
 | [0005](0005-metricas-e-estatistica.md) | Métricas, intervalos de confiança e critérios de decisão | aceita |
 | [0006](0006-ollama-e-estado-em-memoria.md) | Ollama no lugar do llama.cpp compilado, e estado da sandbox em memória | aceita |
+| [0007](0007-professor-gpt-oss.md) | O professor é o gpt-oss-20b | aceita (falta a revisão do português) |
 
 ADRs previstos para os próximos dias: LoRA × QLoRA e hiperparâmetros (sexta, no treino), formato e quantização do GGUF (sábado) e estratégia do DPO (v1.1).
