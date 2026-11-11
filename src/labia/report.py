@@ -313,6 +313,8 @@ def render_results(
             *_hypothesis_table(sensitivity),
             "",
         ]
+    if cost:
+        lines += _cost_table(cost, {m.id: m.label for m in metrics.models})
     return "\n".join(lines)
 
 

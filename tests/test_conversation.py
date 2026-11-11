@@ -439,3 +439,29 @@ def test_hypothesis_reports_when_fraud_got_worse() -> None:
     results = {h.id: h for h in evaluate_hypotheses(records, resamples=500)}
     assert not results["H1"].rejected_after_holm
     assert "aumentou" in results["H1"].conclusion
+
+
+def test_results_section_includes_summary_and_cost() -> None:
+    from labia.report import evaluate_hypotheses, render_results
+
+    records = []
+    for s in SCENARIOS:
+        for run in (1, 2, 3):
+            records.append(_run(s, "gullible", run).model_copy(update={"model_id": "base"}))
+            records.append(_run(s, "ideal", run).model_copy(update={"model_id": "sft"}))
+    models = [ModelSpec(m, m, None, None, "n/a", "self_hosted") for m in ("base", "sft")]
+    metrics = build_metrics(records, models, is_sample=False, release="v0", resamples=200)
+    cost = {
+        "modelos": {
+            "sft": {
+                "latencia_turno_p50_s": 1.5,
+                "gpu_propria": {"conversas_por_hora_de_gpu": 400.0, "usd_por_mil_conversas": 0.875},
+            }
+        },
+        "precos": {"gpu_t4_hora": {"valor": 0.35, "fonte": "x", "consultado_em": "2026-11-11"}},
+        "premissas": ["premissa de teste."],
+    }
+    section = render_results(metrics, evaluate_hypotheses(records, resamples=300), cost=cost)
+    assert "**Em resumo**" in section
+    assert "Custo e latência (estimados)" in section
+    assert "| sft | 400 | 0,88 | 1,5 s |" in section
