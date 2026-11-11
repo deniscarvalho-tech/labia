@@ -41,6 +41,9 @@ flowchart LR
 | `results/` | Os arquivos de resultado que o painel lê. **Hoje são de exemplo** (`is_sample: true`). |
 | `site-data/` | A linha do tempo das versões, que o portfólio lê. Também de exemplo por enquanto. |
 | `data/` | Os cenários gerados e as conversas das rodadas. Fica **fora do git** (é grande e é regenerável); vai para o Hugging Face. |
+| `experiments/` | O resumo de cada execução no Kaggle (piloto, geração, treino, avaliação), como saiu do notebook ou do script de análise. |
+| `space/` | A demo do Hugging Face Spaces: replay lado a lado e o modo "tente enganar o agente". |
+| `scripts/` | Utilitários: renovar a credencial do Kaggle e publicar no Hugging Face. |
 | `.github/workflows/` | A CI: varredura de segredos e testes em Python 3.11 e 3.13. |
 
 ## Arquivos, um por um
@@ -92,7 +95,7 @@ A função `assess_goal` faz o **teste cruzado**: julga as ações que o cliente
 | `llm.py` | Fala com qualquer servidor no formato da API da OpenAI (Ollama, llama.cpp, vLLM, Google AI Studio, NVIDIA). Tem **cache em disco** (a mesma pergunta não é feita duas vezes) e **teto de chamadas** por rodada. |
 | `prompts/` | O texto da política que o agente recebe (idêntico à Parte 1 dos documentos aprovados; um teste confere), o reforço e o prompt do cliente simulado. |
 | `agents.py` | O agente e o cliente, em duas versões: com LLM (a de verdade) e roteirizada (regras fixas, para testar sem GPU). |
-| `conversation.py` | O laço: cliente fala, agente consulta e age pelas ferramentas, cliente responde... até o cliente encerrar, o agente transferir ou acabarem os turnos. No fim, chama o verificador. |
+| `conversation.py` | O laço: cliente fala, agente consulta e age pelas ferramentas, cliente responde... até o cliente encerrar, o agente transferir ou acabarem os turnos. No fim, chama o verificador. A classe `Conversation` avança um turno por vez; o benchmark (`run_conversation`) e a demo usam a mesma classe, então a demo julga igual à avaliação. |
 | `runner.py` | Roda muitas conversas em paralelo e grava cada uma assim que termina. Se a sessão do Kaggle cair, rodar de novo continua de onde parou. |
 
 ### Do veredito ao número: `src/labia/stats.py`, `evaluate.py`, `dataset.py`
@@ -104,6 +107,8 @@ A função `assess_goal` faz o **teste cruzado**: julga as ações que o cliente
 | `dataset.py` | O filtro duplo e a exportação para o treino, com destilação de contexto. |
 | `generation_report.py` | O raio-x da geração: onde o professor acerta e erra, o padrão "anunciou sem executar" e a composição do dado de treino (`labia generation-report`). |
 | `report.py` | As hipóteses pré-registradas, a análise de sensibilidade e a seção de resultados do README (`labia evaluate` e `labia report`). |
+| `cards.py` | O model card e o dataset card do Hugging Face, montados dos arquivos de resultado (`labia cards`). Recusa dado de exemplo. |
+| `train_sft.py`, `training.py` | O treino com LoRA: tokeniza as conversas, calcula a perda só nas respostas do agente e grava `treino.json` com o que mediu. |
 
 ### A ponte com o painel: `src/labia/contracts/`
 
@@ -117,6 +122,11 @@ Modelos Pydantic que descrevem exatamente o formato de cada arquivo de resultado
 | `labia run` | Roda conversas com modelos de verdade, em qualquer servidor compatível. |
 | `labia filter` | Aplica o filtro duplo e exporta o dataset de treino. |
 | `labia samples` | Gera os arquivos de resultado **de exemplo**, rodando agentes roteirizados. |
+| `labia generation-report` | O raio-x da geração do dado de treino. |
+| `labia evaluate` | Das conversas da avaliação aos `results/*.json` reais, com as hipóteses e a análise de sensibilidade. |
+| `labia report` | Reescreve a seção de resultados do README a partir de `results/`. |
+| `labia cards` | Escreve os cards do Hugging Face. |
+| `labia publish-check` | Recusa publicar se algum arquivo de resultado for de exemplo. |
 | `labia schemas` | Gera os JSON Schemas do contrato. |
 
 ## Os testes

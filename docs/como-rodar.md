@@ -123,6 +123,74 @@ O notebook `08-avaliacao-api` chama o DeepSeek (pelo teste gratuito da NVIDIA) e
 
 Nunca cole as chaves no chat, num print ou num arquivo do projeto. Os termos dessas camadas permitem só teste e avaliação: nada do que esses modelos escreverem entra no dado de treino.
 
+## 8. A cadeia completa no Kaggle: gerar, treinar, avaliar
+
+Cada notebook fixa o commit do código que usa (`LABIA_COMMIT`). O Kaggle permite **2 sessões de GPU ao mesmo tempo**, então a ordem importa. Envie cada notebook com:
+
+```powershell
+kaggle kernels push -p notebooks/<pasta> --accelerator NvidiaTeslaT4
+kaggle kernels status deniscarvalhotech/<id-do-notebook>
+```
+
+| Ordem | Pasta | O que faz | Depende de | Tempo medido |
+|---|---|---|---|---|
+| 1 | `04-geracao-fatia-1` e `04-geracao-fatia-2` | o professor atende os cenários de treino (metade em cada) | nada | 4,0 h e 4,5 h |
+| 2 | `05-avaliacao-base` | o modelo-base, com prompt padrão e reforçado, nos 212 cenários de teste × 3 rodadas | nada | — |
+| 3 | `06-treino-sft` | treina com as conversas aprovadas, funde o adaptador e gera o GGUF | as duas fatias (`kernel_sources`) | — |
+| 4 | `06-treino-sem-filtro` | a ablação: mesma configuração e mesmas épocas do treino principal, sem o filtro | as duas fatias | — |
+| 5 | `07-avaliacao-sft` e `07-avaliacao-sem-filtro` | avaliam os modelos treinados, com o mesmo código da avaliação do base | o notebook de treino correspondente | — |
+
+Os traços viram números quando cada execução terminar.
+
+Para ligar um notebook ao outro, o `kernel-metadata.json` lista em `kernel_sources` os notebooks cuja saída ele lê. O Kaggle monta essa saída em `/kaggle/input/<id>/`.
+
+Quando um notebook terminar, baixe a saída para `data/`:
+
+```powershell
+kaggle kernels output deniscarvalhotech/labia-04-geracao-fatia-1 -p data/geracao/fatia-1
+```
+
+## 9. Analisar no seu computador
+
+Tudo daqui em diante roda sem GPU, a partir dos arquivos baixados:
+
+```powershell
+# o raio-x da geração: acertos do professor e composição do dado de treino
+uv run labia generation-report data/geracao/fatia-1/geracao/runs.jsonl data/geracao/fatia-2/geracao/runs.jsonl
+
+# das conversas da avaliação aos results/*.json reais, com as hipóteses e a análise de sensibilidade
+uv run labia evaluate data/avaliacao/*.jsonl
+
+# a seção de resultados do README e os cards do Hugging Face, escritos a partir de results/
+uv run labia report
+uv run labia cards
+```
+
+`labia evaluate` imprime as hipóteses H1 a H3 duas vezes: a análise principal e a de sensibilidade, sem os 2 cenários de gabarito contestável ([ADR 0008](decisoes/0008-gabarito-contestavel.md)).
+
+## 10. A demo
+
+Para ver a interface sem baixar o modelo, com um agente de regras fixas:
+
+```powershell
+cd space
+$env:LABIA_AGENT = "scripted"; $env:LABIA_REPLAY = "../results/replay.json"
+uv run --with gradio==6.31.0 python app.py
+```
+
+Abre em `http://127.0.0.1:7860`. Sem `LABIA_AGENT`, a aba "Tente enganar o agente" baixa o GGUF do Hugging Face e roda na CPU.
+
+## 11. Publicar no Hugging Face
+
+Crie um token de escrita em huggingface.co → Settings → Access Tokens e coloque-o no `.env` como `HF_TOKEN`. Nunca no chat, num print ou num commit.
+
+```powershell
+uv run python scripts/publicar_hf.py --gguf data/modelos/labia-sft-q8_0.gguf             # ensaio: mostra o que faria
+uv run python scripts/publicar_hf.py --gguf data/modelos/labia-sft-q8_0.gguf --publicar  # publica de verdade
+```
+
+O script roda `labia publish-check` antes. Se algum arquivo de resultado for de exemplo, ele para.
+
 ## Problemas comuns
 
 | Sintoma | Causa | Solução |
