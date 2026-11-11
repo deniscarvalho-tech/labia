@@ -214,3 +214,29 @@ def test_filter_rejects_conversation_without_agent_turn() -> None:
     rec = _run(s, "ideal")
     silent = rec.model_copy(update={"messages": [m for m in rec.messages if m.role == "customer"]})
     assert "agente_nao_respondeu" in rejection_reasons(silent)
+
+
+def test_hypotheses_detect_a_scripted_improvement() -> None:
+    """Crédulo como "base" e ideal como "sft": H1 e H3 confirmadas, e o atrito não piora (H2)."""
+    from labia.report import evaluate_hypotheses, inject, render_results
+
+    records = []
+    for s in SCENARIOS:
+        for run in (1, 2, 3):
+            records.append(_run(s, "gullible", run).model_copy(update={"model_id": "base"}))
+            records.append(_run(s, "ideal", run).model_copy(update={"model_id": "sft"}))
+    results = {h.id: h for h in evaluate_hypotheses(records, resamples=500)}
+    assert results["H1"].rejected_after_holm
+    assert results["H1"].difference < 0
+    assert results["H3"].rejected_after_holm
+    assert results["H2"].rejected_after_holm  # o ideal não barra ninguém
+    models = [ModelSpec(m, m, None, None, "n/a", "self_hosted") for m in ("base", "sft")]
+    metrics = build_metrics(records, models, is_sample=False, release="v0", resamples=200)
+    section = render_results(metrics, list(results.values()))
+    assert "H1" in section
+    assert "Táticas vistas" in section
+    readme = "antes\n<!-- RESULTADOS:INICIO -->\nvelho\n<!-- RESULTADOS:FIM -->\ndepois"
+    updated = inject(readme, section)
+    assert "velho" not in updated
+    assert updated.startswith("antes")
+    assert updated.endswith("depois")

@@ -1,0 +1,10 @@
+[
+  {"id": "base", "label": "Qwen3-4B sem ajuste", "base_model": "Qwen/Qwen3-4B-Instruct-2507", "params_b": 4.0, "license": "apache-2.0", "access": "self_hosted", "defense": "standard"},
+  {"id": "base+reforco", "label": "Qwen3-4B + prompt reforçado", "base_model": "Qwen/Qwen3-4B-Instruct-2507", "params_b": 4.0, "license": "apache-2.0", "access": "self_hosted", "defense": "reinforced"},
+  {"id": "sft", "label": "Lábia v0 (SFT)", "base_model": "Qwen/Qwen3-4B-Instruct-2507", "params_b": 4.0, "license": "apache-2.0", "access": "self_hosted", "defense": "standard"},
+  {"id": "sft-sem-filtro", "label": "Ablação: SFT sem o filtro", "base_model": "Qwen/Qwen3-4B-Instruct-2507", "params_b": 4.0, "license": "apache-2.0", "access": "self_hosted", "defense": "standard"},
+  {"id": "professor", "label": "Professor (gpt-oss-20b)", "base_model": "openai/gpt-oss-20b", "params_b": 21.0, "license": "apache-2.0", "access": "self_hosted", "defense": "standard"},
+  {"id": "deepseek", "label": "DeepSeek-V4.1-Flash", "base_model": null, "params_b": null, "license": "mit", "access": "api", "defense": "standard"},
+  {"id": "deepseek+reforco", "label": "DeepSeek-V4.1-Flash + prompt reforçado", "base_model": null, "params_b": null, "license": "mit", "access": "api", "defense": "reinforced"},
+  {"id": "gemini-lite", "label": "Gemini Flash-Lite", "base_model": null, "params_b": null, "license": "proprietária", "access": "api", "defense": "standard"}
+]

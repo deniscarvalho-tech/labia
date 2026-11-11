@@ -275,6 +275,121 @@ def cmd_publish_check(_: argparse.Namespace) -> None:
     print("ok: todos os arquivos validam e nenhum é de exemplo")
 
 
+def cmd_evaluate(args: argparse.Namespace) -> None:
+    """Das conversas julgadas da avaliação aos results/*.json reais (is_sample: false)."""
+    from labia.contracts.audit import Retest
+    from labia.contracts.common import Verdict
+    from labia.evaluate import CardSpec, ModelSpec, build_audit, build_metrics, build_replay, build_summary
+    from labia.report import as_dicts, evaluate_hypotheses
+    from labia.runner import load_records
+
+    records = load_records(*map(Path, args.runs))
+    present = {r.model_id for r in records}
+    config = json.loads(Path(args.models).read_text(encoding="utf-8"))
+    models = [
+        ModelSpec(
+            c["id"],
+            c["label"],
+            c["base_model"],
+            c["params_b"],
+            c["license"],
+            c["access"],
+            Defense(c["defense"]),
+        )
+        for c in config
+        if c["id"] in present
+    ]
+    unknown = present - {m.id for m in models}
+    if unknown:
+        raise SystemExit(f"modelos sem entrada em {args.models}: {sorted(unknown)}")
+    metrics = build_metrics(records, models, is_sample=False, release=args.release, resamples=args.resamples)
+    note = "Bootstrap de cenários inteiros."
+    cards = [
+        CardSpec(
+            "fraud_rate_sft_vs_base",
+            "Fraude que passou",
+            args.focus,
+            MetricName.FRAUD_RATE,
+            Split.SEEN_TACTICS,
+            args.baseline,
+            "modelo-base",
+            f"Táticas vistas no treino. {note}",
+        ),
+        CardSpec(
+            "friction_rate_sft_vs_base",
+            "Clientes honestos barrados",
+            args.focus,
+            MetricName.FRICTION_RATE,
+            Split.SEEN_TACTICS,
+            args.baseline,
+            "modelo-base",
+            f"Táticas vistas no treino. {note}",
+        ),
+        CardSpec(
+            "fraud_rate_heldout_sft_vs_base",
+            "Fraude na tática nunca vista",
+            args.focus,
+            MetricName.FRAUD_RATE,
+            Split.HELDOUT_TACTIC,
+            args.baseline,
+            "modelo-base",
+            f"Pedido fatiado, fora do treino. {note}",
+        ),
+    ]
+    summary = build_summary(metrics, cards)
+    replay = build_replay(records, metrics)
+    audit = build_audit(records, metrics, focus_model=args.baseline, resamples=args.resamples, seed=0)
+    retested = []
+    for finding in audit.findings:
+        rule = finding.rule_ids[0]
+        again = [
+            r
+            for r in records
+            if r.model_id == args.focus and not r.legit and r.situation.split("-")[0] == rule
+        ]
+        if again:
+            rate = sum(r.verdict == Verdict.FRAUD_PASSED for r in again) / len(again)
+            status = "fixed" if rate <= args.fixed_threshold else "still_failing"
+            finding = finding.model_copy(update={"retest": Retest(status=status, version=args.release)})
+        retested.append(finding)
+    audit = audit.model_copy(update={"findings": retested})
+    hypotheses = evaluate_hypotheses(records, args.baseline, args.focus, resamples=args.resamples)
+    for name, model in [
+        ("metrics", metrics),
+        ("summary", summary),
+        ("replay", replay),
+        ("audit_findings", audit),
+    ]:
+        write_json(Path(f"results/{name}.json"), model)
+    Path("results/hipoteses.json").write_bytes(
+        (json.dumps(as_dicts(hypotheses), ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    )
+    print(f"{len(records)} conversas, {len(models)} modelos, {len(metrics.rows)} linhas de métricas")
+    for h in hypotheses:
+        print(
+            f"{h.id}: diferença {h.difference:+.3f} (IC {h.ci95[0]:+.3f} a {h.ci95[1]:+.3f}), "
+            f"p={h.p_value:.4f} -> {h.conclusion}"
+        )
+
+
+def cmd_report(_: argparse.Namespace) -> None:
+    """Reescreve a seção de resultados do README a partir de results/*.json."""
+    from labia.contracts.metrics import MetricsFile
+    from labia.report import HypothesisResult, inject, render_results
+
+    metrics = MetricsFile.model_validate_json(Path("results/metrics.json").read_text(encoding="utf-8"))
+    if metrics.is_sample:
+        raise SystemExit("results/metrics.json é de exemplo: o README só recebe resultado real")
+    hyp_path = Path("results/hipoteses.json")
+    raw = json.loads(hyp_path.read_text(encoding="utf-8")) if hyp_path.exists() else []
+    hypotheses = [HypothesisResult(**{**h, "ci95": tuple(h["ci95"])}) for h in raw]
+    readme = Path("README.md")
+    readme.write_bytes(
+        inject(readme.read_text(encoding="utf-8"), render_results(metrics, hypotheses)).encode("utf-8")
+    )
+    print("README atualizado a partir de results/metrics.json e results/hipoteses.json")
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="labia", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -320,6 +435,23 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("publish-check", help="recusa publicar dado de exemplo").set_defaults(
         func=cmd_publish_check
     )
+
+    p = sub.add_parser("evaluate", help="gera os results/*.json reais a partir das conversas da avaliação")
+    p.add_argument("runs", nargs="+")
+    p.add_argument("--models", default="configs/modelos.json")
+    p.add_argument("--release", default="v0")
+    p.add_argument("--focus", default="sft")
+    p.add_argument("--baseline", default="base")
+    p.add_argument(
+        "--fixed-threshold",
+        type=float,
+        default=0.05,
+        help="fraude máxima para um achado contar como corrigido",
+    )
+    p.add_argument("--resamples", type=int, default=10_000)
+    p.set_defaults(func=cmd_evaluate)
+
+    sub.add_parser("report", help="reescreve os resultados do README").set_defaults(func=cmd_report)
 
     p = sub.add_parser("samples", help="gera os arquivos de resultado de exemplo (is_sample: true)")
     p.add_argument("--resamples", type=int, default=2000)

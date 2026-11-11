@@ -63,7 +63,9 @@ As empresas são fictícias: o **Banco Saracura** (regras B1 a B5) e o **Quati D
 
 ## Resultados
 
-A avaliação completa ainda não rodou. Esta seção vai ser gerada pelo script `labia report`, a partir de `results/*.json`.
+<!-- RESULTADOS:INICIO -->
+A avaliação completa ainda não rodou. Esta seção é gerada pelo comando `labia report`, a partir de `results/*.json`: nenhum número dela é digitado à mão.
+<!-- RESULTADOS:FIM -->
 
 ### O que já foi medido (pilotos)
 
