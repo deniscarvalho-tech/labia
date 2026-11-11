@@ -13,5 +13,6 @@ O resumo de cada execução no Kaggle, como saiu do notebook. Nenhum número aqu
 | `05-avaliacao-base-v1` | `05-avaliacao-base` (versão 1) | `9cf4dea` | o modelo-base, com prompt padrão e reforçado | **inválido**: o laço descartava a última fala do cliente em 85% das conversas (decisão 0009, corrigido em `c7a683c`); guardado para registro |
 | `06-treino-sft` | `06-treino-sft` | `ab3c24e` | o treino do modelo Lábia v0 | só o Unsloth com QLoRA numa GPU coube na memória; 1,33 época, 293 passos em 4,2 h a 490 tokens/s, pico de 4,9 GB; perda de 1,48 para 0,35; GGUF de 3,99 GB |
 | `09-demo-na-cpu-v1` | `09-demo-na-cpu` (versão 1) | `ec535c3` | o modelo ajustado só na CPU, como na demo | funciona de ponta a ponta (chamadas válidas, 4 conversas de fumaça); 4 bits: 2,33 GB, 1ª resposta 212 s e as seguintes 24 s com 2 núcleos; 8 bits: 3,99 GB, 271 s e 29 s |
+| `09-demo-na-cpu` | `09-demo-na-cpu` (versão 2) | `c9aa1f7` | o mesmo, mais o estado pré-aquecido que a demo usa | com o estado restaurado, a 1ª resposta cai de 217 s para 12 s (4 bits, 2 núcleos); aquecer cada cenário custa cerca de 200 s, uma vez, ao ligar |
 
 Os dados completos de cada execução (todas as conversas) ficam fora do git, em `data/`, e vão para o Hugging Face.

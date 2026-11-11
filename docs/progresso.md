@@ -4,7 +4,7 @@
 
 Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle · **[pronto p/ rodar]** construído, esperando a vez · **[falta]** ainda não feito · **[você]** depende de você.
 
-Última atualização: 11/11/2026, 17h.
+Última atualização: 11/11/2026, 18h.
 
 ## 1. Pesquisa e rigor
 
@@ -63,9 +63,9 @@ Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle �
 | 05. Avaliação do modelo-base, versão 2 (laço corrigido) | [rodando] desde 15h15 | — | a linha de base: sem ela não dá para dizer que o treino melhorou |
 | 06. Treino SFT | [pronto] | Unsloth QLoRA numa GPU (as outras configurações estouraram a memória); 1,33 época em 4,2 h; perda de 1,48 para 0,35 | o modelo Lábia v0 (ADR 0010) |
 | 06. Treino da ablação, sem o filtro | [pronto p/ rodar] com a configuração idêntica; espera vaga e cota | — | responde "o filtro do verificador faz diferença?" |
-| 07. Avaliação do modelo ajustado | [rodando] desde 16h20 | — | as hipóteses H1 a H3 |
+| 07. Avaliação do modelo ajustado | [pronto] 1,45 h | esperando a do base para comparar | as hipóteses H1 a H3 |
 | 07. Avaliação da ablação | [pronto p/ rodar] depois do treino dela | — | o efeito do filtro |
-| 09. O modelo ajustado na CPU (latência da demo, 4 × 8 bits) | [rodando] desde 16h50, só CPU (não gasta cota) | — | garante que a demo ao vivo funciona e mede quanto ela demora |
+| 09. O modelo ajustado na CPU (latência da demo, 4 × 8 bits) | [pronto] só CPU (não gasta cota) | funciona de ponta a ponta; com o estado pré-aquecido, a 1ª resposta cai de 217 s para 12 s | garante que a demo ao vivo funciona e é usável |
 | 08. Avaliação pelas APIs (DeepSeek, Gemini) | [pronto p/ rodar] [você] faltam as chaves | — | compara o modelo pequeno com modelos grandes |
 
 ## 5. Produto

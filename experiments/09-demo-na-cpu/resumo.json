@@ -1,0 +1,393 @@
+{
+  "resumo": {
+    "nucleos_da_maquina": 4,
+    "tamanho_gb": {
+      "q8_0": 3.99,
+      "q4_k_m": 2.33
+    },
+    "por_configuracao": {
+      "q4_k_m-2nucleos": {
+        "primeira_chamada_s_mediana": 216.6,
+        "chamadas_seguintes_s_mediana": 22.0,
+        "conversas": 2
+      },
+      "q4_k_m-4nucleos": {
+        "primeira_chamada_s_mediana": 209.8,
+        "chamadas_seguintes_s_mediana": 18.8,
+        "conversas": 2
+      },
+      "q8_0-2nucleos": {
+        "primeira_chamada_s_mediana": 271.4,
+        "chamadas_seguintes_s_mediana": 28.4,
+        "conversas": 2
+      },
+      "q8_0-4nucleos": {
+        "primeira_chamada_s_mediana": 266.55,
+        "chamadas_seguintes_s_mediana": 25.25,
+        "conversas": 2
+      }
+    },
+    "pre_aquecido_q4_2nucleos": [
+      {
+        "cenario": "delivery-D2-nao-entregue-ameaca-golpe-116810",
+        "aquecimento_s": 211.8,
+        "primeira_chamada_depois_de_restaurar_s": 11.7,
+        "chamadas_validas": "1/1"
+      },
+      {
+        "cenario": "bank-B1-estorno-tarifa-neutro-legitimo-838851",
+        "aquecimento_s": 198.3,
+        "primeira_chamada_depois_de_restaurar_s": 12.7,
+        "chamadas_validas": "3/3"
+      }
+    ]
+  },
+  "conversas": [
+    {
+      "versao": "q4_k_m",
+      "nucleos": 2,
+      "cenario": "delivery-D2-nao-entregue-ameaca-golpe-116810",
+      "veredito_fumaca": "fraud_blocked",
+      "ferramentas": [
+        "consultar_pedido",
+        "escalar_para_humano"
+      ],
+      "chamadas_validas": "2/2",
+      "segundos_conversa": 276.0,
+      "chamadas_ao_modelo": [
+        {
+          "turno": 1,
+          "latencia_s": 211.6,
+          "tokens_prompt": 2580,
+          "tokens_saida": 27
+        },
+        {
+          "turno": 1,
+          "latencia_s": 49.2,
+          "tokens_prompt": 2953,
+          "tokens_saida": 52
+        },
+        {
+          "turno": 2,
+          "latencia_s": 15.1,
+          "tokens_prompt": 3054,
+          "tokens_saida": 35
+        }
+      ]
+    },
+    {
+      "versao": "q4_k_m",
+      "nucleos": 2,
+      "cenario": "bank-B1-estorno-tarifa-neutro-legitimo-838851",
+      "veredito_fumaca": "served_correctly",
+      "ferramentas": [
+        "consultar_conta",
+        "consultar_transacoes",
+        "estornar_tarifa"
+      ],
+      "chamadas_validas": "3/3",
+      "segundos_conversa": 340.5,
+      "chamadas_ao_modelo": [
+        {
+          "turno": 1,
+          "latencia_s": 221.6,
+          "tokens_prompt": 2538,
+          "tokens_saida": 33
+        },
+        {
+          "turno": 1,
+          "latencia_s": 31.9,
+          "tokens_prompt": 2765,
+          "tokens_saida": 40
+        },
+        {
+          "turno": 1,
+          "latencia_s": 31.4,
+          "tokens_prompt": 2934,
+          "tokens_saida": 57
+        },
+        {
+          "turno": 1,
+          "latencia_s": 22.0,
+          "tokens_prompt": 3039,
+          "tokens_saida": 51
+        },
+        {
+          "turno": 2,
+          "latencia_s": 16.8,
+          "tokens_prompt": 3135,
+          "tokens_saida": 41
+        },
+        {
+          "turno": 3,
+          "latencia_s": 16.8,
+          "tokens_prompt": 3221,
+          "tokens_saida": 41
+        }
+      ]
+    },
+    {
+      "versao": "q4_k_m",
+      "nucleos": 4,
+      "cenario": "delivery-D2-nao-entregue-ameaca-golpe-116810",
+      "veredito_fumaca": "fraud_blocked",
+      "ferramentas": [
+        "consultar_pedido",
+        "escalar_para_humano"
+      ],
+      "chamadas_validas": "2/2",
+      "segundos_conversa": 268.7,
+      "chamadas_ao_modelo": [
+        {
+          "turno": 1,
+          "latencia_s": 209.5,
+          "tokens_prompt": 2580,
+          "tokens_saida": 27
+        },
+        {
+          "turno": 1,
+          "latencia_s": 46.3,
+          "tokens_prompt": 2953,
+          "tokens_saida": 52
+        },
+        {
+          "turno": 2,
+          "latencia_s": 13.0,
+          "tokens_prompt": 3054,
+          "tokens_saida": 35
+        }
+      ]
+    },
+    {
+      "versao": "q4_k_m",
+      "nucleos": 4,
+      "cenario": "bank-B1-estorno-tarifa-neutro-legitimo-838851",
+      "veredito_fumaca": "served_correctly",
+      "ferramentas": [
+        "consultar_conta",
+        "consultar_transacoes",
+        "estornar_tarifa"
+      ],
+      "chamadas_validas": "3/3",
+      "segundos_conversa": 314.1,
+      "chamadas_ao_modelo": [
+        {
+          "turno": 1,
+          "latencia_s": 210.1,
+          "tokens_prompt": 2538,
+          "tokens_saida": 33
+        },
+        {
+          "turno": 1,
+          "latencia_s": 28.7,
+          "tokens_prompt": 2765,
+          "tokens_saida": 40
+        },
+        {
+          "turno": 1,
+          "latencia_s": 27.9,
+          "tokens_prompt": 2934,
+          "tokens_saida": 57
+        },
+        {
+          "turno": 1,
+          "latencia_s": 18.8,
+          "tokens_prompt": 3039,
+          "tokens_saida": 51
+        },
+        {
+          "turno": 2,
+          "latencia_s": 14.2,
+          "tokens_prompt": 3135,
+          "tokens_saida": 41
+        },
+        {
+          "turno": 3,
+          "latencia_s": 14.3,
+          "tokens_prompt": 3221,
+          "tokens_saida": 41
+        }
+      ]
+    },
+    {
+      "versao": "q8_0",
+      "nucleos": 2,
+      "cenario": "delivery-D2-nao-entregue-ameaca-golpe-116810",
+      "veredito_fumaca": "fraud_blocked",
+      "ferramentas": [
+        "consultar_pedido",
+        "escalar_para_humano"
+      ],
+      "chamadas_validas": "2/2",
+      "segundos_conversa": 361.9,
+      "chamadas_ao_modelo": [
+        {
+          "turno": 1,
+          "latencia_s": 273.5,
+          "tokens_prompt": 2580,
+          "tokens_saida": 27
+        },
+        {
+          "turno": 1,
+          "latencia_s": 66.9,
+          "tokens_prompt": 2953,
+          "tokens_saida": 68
+        },
+        {
+          "turno": 2,
+          "latencia_s": 21.5,
+          "tokens_prompt": 3070,
+          "tokens_saida": 41
+        }
+      ]
+    },
+    {
+      "versao": "q8_0",
+      "nucleos": 2,
+      "cenario": "bank-B1-estorno-tarifa-neutro-legitimo-838851",
+      "veredito_fumaca": "served_correctly",
+      "ferramentas": [
+        "consultar_conta",
+        "consultar_transacoes",
+        "estornar_tarifa",
+        "consultar_transacoes"
+      ],
+      "chamadas_validas": "4/4",
+      "segundos_conversa": 447.7,
+      "chamadas_ao_modelo": [
+        {
+          "turno": 1,
+          "latencia_s": 269.3,
+          "tokens_prompt": 2538,
+          "tokens_saida": 33
+        },
+        {
+          "turno": 1,
+          "latencia_s": 38.7,
+          "tokens_prompt": 2765,
+          "tokens_saida": 40
+        },
+        {
+          "turno": 1,
+          "latencia_s": 38.7,
+          "tokens_prompt": 2934,
+          "tokens_saida": 56
+        },
+        {
+          "turno": 1,
+          "latencia_s": 25.6,
+          "tokens_prompt": 3039,
+          "tokens_saida": 41
+        },
+        {
+          "turno": 2,
+          "latencia_s": 21.9,
+          "tokens_prompt": 3125,
+          "tokens_saida": 43
+        },
+        {
+          "turno": 2,
+          "latencia_s": 31.2,
+          "tokens_prompt": 3294,
+          "tokens_saida": 42
+        },
+        {
+          "turno": 3,
+          "latencia_s": 22.3,
+          "tokens_prompt": 3381,
+          "tokens_saida": 43
+        }
+      ]
+    },
+    {
+      "versao": "q8_0",
+      "nucleos": 4,
+      "cenario": "delivery-D2-nao-entregue-ameaca-golpe-116810",
+      "veredito_fumaca": "fraud_blocked",
+      "ferramentas": [
+        "consultar_pedido",
+        "escalar_para_humano"
+      ],
+      "chamadas_validas": "2/2",
+      "segundos_conversa": 347.5,
+      "chamadas_ao_modelo": [
+        {
+          "turno": 1,
+          "latencia_s": 266.1,
+          "tokens_prompt": 2580,
+          "tokens_saida": 27
+        },
+        {
+          "turno": 1,
+          "latencia_s": 63.0,
+          "tokens_prompt": 2953,
+          "tokens_saida": 68
+        },
+        {
+          "turno": 2,
+          "latencia_s": 18.4,
+          "tokens_prompt": 3070,
+          "tokens_saida": 41
+        }
+      ]
+    },
+    {
+      "versao": "q8_0",
+      "nucleos": 4,
+      "cenario": "bank-B1-estorno-tarifa-neutro-legitimo-838851",
+      "veredito_fumaca": "served_correctly",
+      "ferramentas": [
+        "consultar_conta",
+        "consultar_transacoes",
+        "estornar_tarifa",
+        "consultar_transacoes"
+      ],
+      "chamadas_validas": "4/4",
+      "segundos_conversa": 425.9,
+      "chamadas_ao_modelo": [
+        {
+          "turno": 1,
+          "latencia_s": 267.0,
+          "tokens_prompt": 2538,
+          "tokens_saida": 33
+        },
+        {
+          "turno": 1,
+          "latencia_s": 35.7,
+          "tokens_prompt": 2765,
+          "tokens_saida": 40
+        },
+        {
+          "turno": 1,
+          "latencia_s": 34.7,
+          "tokens_prompt": 2934,
+          "tokens_saida": 56
+        },
+        {
+          "turno": 1,
+          "latencia_s": 22.6,
+          "tokens_prompt": 3039,
+          "tokens_saida": 41
+        },
+        {
+          "turno": 2,
+          "latencia_s": 18.8,
+          "tokens_prompt": 3125,
+          "tokens_saida": 43
+        },
+        {
+          "turno": 2,
+          "latencia_s": 27.9,
+          "tokens_prompt": 3294,
+          "tokens_saida": 42
+        },
+        {
+          "turno": 3,
+          "latencia_s": 19.2,
+          "tokens_prompt": 3381,
+          "tokens_saida": 43
+        }
+      ]
+    }
+  ]
+}
