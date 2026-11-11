@@ -245,7 +245,8 @@ def _cost_table(cost: dict[str, Any], names: dict[str, str]) -> list[str]:
     gpu = cost.get("precos", {}).get("gpu_t4_hora", {})
     lines += [
         "",
-        f"Premissas: preço público da T4 (US$ {gpu.get('valor', 0):.2f} por hora, {gpu.get('fonte', '')}, "
+        f"Premissas: preço público da T4 (US$ {gpu.get('valor', 0):.2f} por hora, ".replace(".", ",")
+        + f"{gpu.get('fonte', '')}, "
         f"consultado em {gpu.get('consultado_em', '')}); "
         + " ".join(cost.get("premissas", []))
         + " Fonte: `results/custo.json`.",
