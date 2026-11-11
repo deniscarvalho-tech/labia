@@ -58,7 +58,7 @@ ignore_missing_imports = true
 
 # Bibliotecas de GPU: só existem no Kaggle. O treino é testado lá, nos testes de fumaça.
 [[tool.mypy.overrides]]
-module = ["torch.*", "transformers.*", "peft.*", "unsloth.*"]
+module = ["torch.*", "transformers.*", "peft.*", "unsloth.*", "llama_cpp.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

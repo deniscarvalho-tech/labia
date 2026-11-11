@@ -212,8 +212,9 @@ def make_agent(scenario: Scenario) -> Any:
     if AGENT_KIND == "scripted":
         return ScriptedAgent(scenario, "ideal", random.Random(0))
     if _CLIENT is None:
-        from backend import LlamaCppClient
         from huggingface_hub import hf_hub_download
+
+        from labia.local_llm import LlamaCppClient
 
         _CLIENT = LlamaCppClient(hf_hub_download(MODEL_REPO, MODEL_FILE), TOKENIZER_REPO)
     return LLMAgent(_CLIENT, MODEL_FILE, temperature=0.7, max_tokens=512)

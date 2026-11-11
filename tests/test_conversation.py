@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import random
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -343,3 +344,40 @@ def test_fixed_loop_never_leaves_the_last_customer_line_unanswered() -> None:
     assert unanswered_endings(records) == []
     old_style = records[0].model_copy(update={"messages": [*records[0].messages, records[0].messages[0]]})
     assert unanswered_endings([old_style]) == [old_style]
+
+
+def test_local_llm_client_reads_tool_calls_from_text() -> None:
+    """O cliente da demo na CPU monta o prompt pelo template e lê <tool_call> do texto gerado."""
+    import threading
+
+    from labia.local_llm import LlamaCppClient
+
+    class FakeTokenizer:
+        def apply_chat_template(self, messages: list[dict[str, Any]], **_: Any) -> str:
+            return "|".join(m["role"] for m in messages)
+
+    class FakeLlama:
+        def __init__(self) -> None:
+            self.prompts: list[str] = []
+
+        def create_completion(self, prompt: str, **_: Any) -> dict[str, Any]:
+            self.prompts.append(prompt)
+            text = 'Vou conferir.<tool_call>{"name": "consultar_pedido", "arguments": {"id_pedido": "QTI-1"}}</tool_call>'
+            return {
+                "choices": [{"text": text, "finish_reason": "stop"}],
+                "usage": {"prompt_tokens": 7, "completion_tokens": 3},
+            }
+
+    client = object.__new__(LlamaCppClient)
+    client.llm, client.tokenizer, client.lock = FakeLlama(), FakeTokenizer(), threading.Lock()
+    reply = client.complete(
+        ChatRequest(
+            model="x", messages=[{"role": "system", "content": "s"}, {"role": "user", "content": "u"}]
+        )
+    )
+    assert client.llm.prompts == ["system|user"]
+    assert reply.content == "Vou conferir."
+    assert [(c.name, json.loads(c.arguments)) for c in reply.tool_calls] == [
+        ("consultar_pedido", {"id_pedido": "QTI-1"})
+    ]
+    assert (reply.prompt_tokens, reply.completion_tokens) == (7, 3)

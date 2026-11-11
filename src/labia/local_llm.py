@@ -1,4 +1,4 @@
-"""O agente da demo ao vivo: o modelo em GGUF rodando na CPU com llama.cpp.
+"""O modelo em GGUF rodando na CPU com llama.cpp: o agente da demo ao vivo e do teste de latência na CPU.
 
 O prompt é montado pelo template de chat do próprio Qwen (o mesmo do treino), e as chamadas de ferramenta
 saem do texto (`<tool_call>{...}</tool_call>`), com o mesmo leitor que o benchmark usa como plano B.
