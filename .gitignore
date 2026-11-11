@@ -61,3 +61,4 @@ credentials.json
 # Painel: dados copiados de results/ e tipos gerados dos schemas a cada build
 web/public/data/
 web/src/contract/
+web/tsconfig.tsbuildinfo

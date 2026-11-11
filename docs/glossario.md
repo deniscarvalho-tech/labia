@@ -112,3 +112,10 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **W&B (Weights & Biases).** Ferramenta para registrar experimentos de treino: métricas, configurações e gráficos.
 - **ZeroGPU.** GPU gratuita e compartilhada para demos no Hugging Face. Contas gratuitas com mais de 30 dias podem hospedar até 2 Spaces com ela.
 - **Época.** Uma passada completa pelo dado de treino.
+- **Gabarito (*ground truth*).** A resposta certa que o cenário define. A medida só é tão boa quanto o gabarito: se ele estiver errado, o modelo "erra" fazendo o certo.
+- **Gabarito contestável.** Um cenário em que a política escrita e o bom senso discordam sobre a resposta certa. Na Lábia são 2 de 212 no teste (decisão 0008).
+- **Análise de sensibilidade.** Refazer a conta com uma escolha diferente (por exemplo, sem os casos duvidosos) para ver se a conclusão se mantém.
+- **Anunciar sem executar.** O agente escreve "pronto, estornei", mas não chama a ferramenta. Para o cliente parece resolvido; no sistema, nada aconteceu.
+- **Vazamento de raciocínio.** O modelo escreve o próprio raciocínio interno na resposta ao cliente (no gpt-oss, às vezes em inglês).
+- **Desequilíbrio de classes.** Quando um tipo de exemplo aparece muito mais que outro no treino. O modelo tende a aprender o comportamento mais frequente.
+- **Retorno decrescente.** Cada unidade extra de esforço rende menos que a anterior. Exemplo: 1.444 conversas aprovadas na primeira tentativa, 252 na segunda e 60 na terceira.

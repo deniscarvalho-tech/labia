@@ -628,3 +628,92 @@ As alternativas (LoRA em 16 bits, as duas GPUs, Unsloth) falharam todas no teste
 
 **4. Seu primeiro piloto deu 100% de golpes bloqueados num dos modelos. Por que você não comemorou?**
 "Porque número bom demais pede leitura. As conversas mostraram que o cliente simulado ia embora na primeira mensagem, antes de o agente responder. Corrigi o laço e o filtro, descartei aquele piloto e rodei de novo. O piloto inválido continua versionado, para registro."
+
+## Etapa 4 — a geração do dado de treino e o raio-x do professor (11/11/2026)
+
+### O que foi feito
+
+O professor (gpt-oss-20b) atendeu os 2.010 cenários de treino em duas sessões do Kaggle, uma para cada metade. Cada sessão levou cerca de 4 horas e meia. O cliente simulado era o próprio gpt-oss. Cada conversa passou pelo verificador e pelo filtro duplo. Cenário reprovado ganhava nova tentativa com outra semente, até 3 tentativas no total (a amostragem por rejeição da etapa 3).
+
+Depois, em vez de mandar os dados direto para o treino, li as conversas em que o professor errou. Essa leitura achou um defeito meu no gerador e permitiu uma previsão sobre o resultado, as duas registradas **antes** de ver qualquer número da avaliação.
+
+Os números abaixo saem de `experiments/04-geracao/analise.json`, gerado pelo comando `labia generation-report`. Nenhum foi digitado à mão.
+
+### O que a geração produziu
+
+| | Valor |
+|---|---|
+| Cenários de treino | 2.010 |
+| Conversas rodadas (com as novas tentativas) | 2.835 |
+| Aprovadas no filtro duplo (uma por cenário) | 1.756 (87% dos cenários) |
+| Aprovadas na 1ª, 2ª e 3ª tentativa | 1.444, 252 e 60 |
+| Horas de GPU | 8,5 (duas sessões de 2× T4) |
+
+O retorno das novas tentativas cai rápido: a segunda tentativa salvou 252 cenários e a terceira, só 60. Uma quarta traria poucos exemplos a mais pelo mesmo custo.
+
+Cerca de 40 primeiras tentativas se perderam por erro 500 do servidor. Nos casos que o log mostra, o Ollama não conseguiu interpretar uma chamada de ferramenta malformada do professor. Esses cenários foram refeitos nas tentativas seguintes.
+
+### O raio-x do professor
+
+Na primeira tentativa, com o prompt reforçado e em cenários de **treino** (por isso esses números não se comparam aos do teste):
+
+- deixou passar **3,7%** dos golpes;
+- barrou **29,6%** dos clientes honestos.
+
+Ou seja, o professor é muito mais cauteloso do que justo. A pior célula é a do **cliente honesto com promessa registrada** (tática T4): só 33% de acerto.
+
+Li dezenas dessas conversas, e os erros têm duas origens diferentes.
+
+**1. Erro do professor: anunciar sem executar.** O professor consulta o protocolo, vê que ele vale e escreve "Estorno confirmado! Vamos processar agora mesmo", mas não chama a ferramenta. O mesmo acontece fora da T4: "o endereço foi atualizado com sucesso", sem chamar `alterar_endereco`. Uma expressão regular que procura esse padrão encontra 86 dos 185 honestos negados. É o mesmo achado do piloto, agora em escala. O prompt reforçado já tinha o item "uma ação só acontece quando você chama a ferramenta", e mesmo assim acontece.
+
+**2. Defeito meu: gabaritos contestáveis.** Na T4, a promessa legítima é montada sobre os fatos de um golpe. Em seis combinações isso fica absurdo. Exemplos:
+
+- prometer estornar uma tarifa que **já foi estornada** (a ferramenta devolve erro);
+- prometer desbloquear uma conta com **bloqueio judicial**;
+- prometer um segundo cupom pelo **mesmo atraso**.
+
+A política diz que promessa registrada se cumpre, mas um atendente sensato questionaria. Quem estava errado nesses casos era o **gabarito**, não o professor.
+
+**3. Vazamento de raciocínio.** Em 2 ou 3 conversas, o professor escreveu o próprio raciocínio, em inglês, na resposta ao cliente ("The tariff already estornada. Cannot estornar again..."). É raro: só 1 conversa aprovada para o treino tem isso. Fica registrado como limitação, e a v1 ganha um filtro para isso.
+
+### O que eu fiz com isso (e o que eu não fiz)
+
+- **Não mexi no teste.** Ele está congelado por hash desde o pré-registro. Mudar o teste depois de ver o dado de treino é como mudar a régua depois de ver a altura.
+- **Pré-registrei uma análise de sensibilidade.** As hipóteses H1 a H3 passam a ser calculadas também sem os 2 cenários do teste que têm gabarito contestável. A regra está no código (`is_contested`), e um teste trava quais são os dois. A análise principal continua sendo a do teste inteiro ([ADR 0008](decisoes/0008-gabarito-contestavel.md)).
+- **Registrei uma previsão.** Só **64 dos 1.756** exemplos de treino ensinam a cumprir uma promessa válida. Já a recusa de promessa falsa tem 162. Por isso prevejo que o modelo ajustado vai barrar honestos com promessa mais do que nas outras táticas. Se acontecer, a explicação já estava escrita antes do resultado.
+- **Não parei o treino.** Os defeitos tocam 9 exemplos de treino em 1.756 (0,5%). Parar custaria uma sessão de GPU inteira para mudar quase nada.
+
+### Conceitos desta etapa
+
+- **Gabarito (ground truth):** a resposta certa que o cenário define. Num benchmark, a medida só é tão boa quanto o gabarito. Se o gabarito estiver errado, o modelo "erra" fazendo o certo.
+- **Análise de sensibilidade:** refazer a conta com uma escolha diferente (aqui, sem os casos duvidosos) para ver se a conclusão se mantém. Se a conclusão muda, ela era frágil. **Analogia:** pesar a mesma coisa em duas balanças. Se dão o mesmo peso, você confia; se dão pesos diferentes, você investiga.
+- **Pré-registro de uma análise:** escrever a regra da análise **antes** de ver os resultados, com data verificável (o commit e a tag no git). Sem isso, sempre fica a suspeita de que a regra foi escolhida porque deu o resultado bonito.
+- **Desequilíbrio de classes no dado de treino:** quando um tipo de exemplo aparece muito mais que outro. Aqui são 989 golpes bloqueados para 767 honestos atendidos, e só 64 promessas cumpridas. O modelo tende a aprender o comportamento mais frequente.
+- **Retorno decrescente:** cada tentativa extra rende menos que a anterior (1.444, depois 252, depois 60). Esse é o argumento para parar em 3.
+
+### Alternativas descartadas
+
+| Alternativa | Por que não |
+|---|---|
+| Treinar direto, sem ler as conversas | os dois achados (gabarito contestável e anunciar sem executar) só aparecem lendo |
+| Corrigir o gerador e regerar o teste | quebraria o congelamento do teste, que é a base da credibilidade dos resultados |
+| Tirar os cenários contestáveis da análise principal | mudança de protocolo depois do início; vira análise de sensibilidade, rotulada como tal |
+| Parar o treino e regerar o dado sem os 9 exemplos | uma sessão de GPU inteira para mexer em 0,5% do dado |
+| Equilibrar golpe e honesto descartando golpes | jogaria fora dado bom; o efeito do desequilíbrio é exatamente o que a H2 (atrito) vai medir |
+
+### Perguntas de entrevista sobre esta etapa
+
+**1. Seu professor errou 30% dos clientes honestos. Por que treinar um aluno com ele?**
+"Porque o aluno não aprende com os erros dele: o filtro só deixa entrar conversa com resultado certo e processo certo. De 2.835 conversas, ficaram 1.756, uma por cenário. O professor erra, mas os acertos dele, verificados, são bons exemplos. O custo é o desequilíbrio: os casos em que o professor mais erra são os que menos aparecem no treino."
+
+**2. O que você fez quando achou um erro no seu próprio gabarito?**
+"Eu não mexi no teste, que estava congelado por hash desde o pré-registro. Escrevi uma regra no código que marca os cenários contestáveis (são 2 dos 212) e registrei, antes de ver qualquer resultado, que as hipóteses também seriam calculadas sem eles. A análise principal continua sendo a do teste inteiro. O commit e a tag provam a ordem."
+
+**3. Como você descobriu que o erro era do gabarito e não do modelo?**
+"Separei os erros do professor por variante do cenário e li as conversas das piores. Em seis variantes, o acerto era quase zero, e lendo ficou claro o motivo: a promessa pedia uma ação absurda, como estornar duas vezes a mesma tarifa. Numa delas, a própria ferramenta devolvia erro. Rodei também um teste automático que executa a ação esperada de cada cenário honesto e confirma que a ferramenta aceita."
+
+**4. Que resultado você espera ver no modelo treinado, e por quê?**
+"Espero menos fraude que o modelo-base, porque o dado tem quase mil exemplos de golpe bloqueado com verificação. E espero que o ponto fraco seja o cliente honesto com promessa válida: só 64 exemplos ensinam a cumprir uma promessa, contra 162 que ensinam a recusar uma falsa. Eu registrei essa previsão antes do resultado."
+
+**5. O que é anunciar sem executar, e por que isso importa para um produto real?**
+"É o agente escrever 'pronto, estornei' sem chamar a ferramenta. Para o cliente, parece resolvido; no sistema, nada aconteceu, e ele volta irritado dias depois. Um juiz que lê só o texto daria nota alta. É o motivo de o meu verificador julgar pelas ações registradas, e não pela conversa."

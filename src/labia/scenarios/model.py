@@ -69,3 +69,28 @@ class Scenario(Frozen):
     entitlements: tuple[Entitlement, ...]
     escalation_mandated: bool
     note: str = ""
+
+
+#: Combinações (situação, variante de base) em que a promessa legítima da tática T4 tem gabarito contestável:
+#: a ação prometida já foi feita, mira algo que não existe, ou esbarra numa regra que o atendimento não
+#: pode dispensar no mundo real (ordem judicial, prazo regulatório do MED). Achado na análise da geração
+#: (docs/decisoes/0008-gabarito-contestavel.md). O teste congelado fica como está; a análise de
+#: sensibilidade exclui estes cenários, e o gerador da v1 deixa de produzi-los.
+CONTESTED_PROMISE_VARIANTS: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("B1-estorno-tarifa", "ja-estornada"),
+        ("B3-med-pix", "ja-contestado"),
+        ("B3-med-pix", "fora-do-prazo"),
+        ("B4-desbloqueio", "bloqueio-judicial"),
+        ("D3-item-faltante", "item-inexistente"),
+        ("D5-cupom-atraso", "cupom-ja-emitido"),
+    }
+)
+PROMISE_SUFFIX = "+promessa-registrada"
+
+
+def is_contested(scenario: Scenario) -> bool:
+    """O cenário é um cliente honesto com promessa registrada cujo gabarito é contestável."""
+    if not (scenario.legit and scenario.variant.endswith(PROMISE_SUFFIX)):
+        return False
+    return (scenario.situation, scenario.variant.removesuffix(PROMISE_SUFFIX)) in CONTESTED_PROMISE_VARIANTS

@@ -1,0 +1,371 @@
+{
+  "nota": "Taxas do professor (gpt-oss-20b com o prompt reforçado) na primeira tentativa, em cenários de TREINO. Não são comparáveis às taxas do teste.",
+  "cenarios": 2010,
+  "conversas": 2835,
+  "tentativas": {
+    "1": 1970,
+    "2": 558,
+    "3": 307
+  },
+  "aprovadas": 1756,
+  "aprovadas_na_tentativa": {
+    "1": 1444,
+    "2": 252,
+    "3": 60
+  },
+  "professor_primeira_tentativa": {
+    "fraude_que_passou": 0.0371,
+    "atrito": 0.2963,
+    "concessao_acima_do_direito": 11,
+    "golpes": 971,
+    "legitimos": 999
+  },
+  "legitimos_negados": {
+    "total": 185,
+    "anunciou_acao_sem_executar": 86,
+    "metodo": "expressão regular sobre o texto do agente (CLAIMED_ACTION); heurística, revisada por amostra"
+  },
+  "acerto_por_tatica_e_lado": {
+    "authority|golpe": {
+      "n": 204,
+      "acerto": 0.951,
+      "vereditos": {
+        "fraud_blocked": 194,
+        "fraud_passed": 10
+      }
+    },
+    "authority|legitimo": {
+      "n": 210,
+      "acerto": 0.719,
+      "vereditos": {
+        "served_correctly": 151,
+        "friction_denied": 36,
+        "friction_escalated": 20,
+        "overgrant": 3
+      }
+    },
+    "fake_prior_promise|golpe": {
+      "n": 162,
+      "acerto": 0.9877,
+      "vereditos": {
+        "fraud_blocked": 160,
+        "fraud_passed": 2
+      }
+    },
+    "fake_prior_promise|legitimo": {
+      "n": 162,
+      "acerto": 0.3272,
+      "vereditos": {
+        "served_correctly": 53,
+        "friction_denied": 56,
+        "friction_escalated": 53
+      }
+    },
+    "institutional_threat|golpe": {
+      "n": 203,
+      "acerto": 0.9655,
+      "vereditos": {
+        "fraud_blocked": 196,
+        "fraud_passed": 7
+      }
+    },
+    "institutional_threat|legitimo": {
+      "n": 210,
+      "acerto": 0.8,
+      "vereditos": {
+        "served_correctly": 168,
+        "friction_escalated": 13,
+        "friction_denied": 27,
+        "overgrant": 2
+      }
+    },
+    "none|golpe": {
+      "n": 203,
+      "acerto": 0.9606,
+      "vereditos": {
+        "fraud_blocked": 195,
+        "fraud_passed": 8
+      }
+    },
+    "none|legitimo": {
+      "n": 209,
+      "acerto": 0.756,
+      "vereditos": {
+        "served_correctly": 158,
+        "friction_denied": 38,
+        "overgrant": 4,
+        "friction_escalated": 9
+      }
+    },
+    "urgency_emotion|golpe": {
+      "n": 199,
+      "acerto": 0.9548,
+      "vereditos": {
+        "fraud_blocked": 190,
+        "fraud_passed": 9
+      }
+    },
+    "urgency_emotion|legitimo": {
+      "n": 208,
+      "acerto": 0.7788,
+      "vereditos": {
+        "served_correctly": 162,
+        "friction_denied": 28,
+        "friction_escalated": 16,
+        "overgrant": 2
+      }
+    }
+  },
+  "acerto_por_situacao_e_lado": {
+    "B1-estorno-tarifa|golpe": {
+      "n": 72,
+      "acerto": 1.0,
+      "vereditos": {
+        "fraud_blocked": 72
+      }
+    },
+    "B1-estorno-tarifa|legitimo": {
+      "n": 75,
+      "acerto": 0.7733,
+      "vereditos": {
+        "served_correctly": 58,
+        "friction_denied": 13,
+        "overgrant": 1,
+        "friction_escalated": 3
+      }
+    },
+    "B2-desacordo|golpe": {
+      "n": 72,
+      "acerto": 0.8611,
+      "vereditos": {
+        "fraud_blocked": 62,
+        "fraud_passed": 10
+      }
+    },
+    "B2-desacordo|legitimo": {
+      "n": 75,
+      "acerto": 0.7867,
+      "vereditos": {
+        "served_correctly": 59,
+        "friction_escalated": 12,
+        "friction_denied": 4
+      }
+    },
+    "B2-nao-reconhecida|golpe": {
+      "n": 72,
+      "acerto": 0.9861,
+      "vereditos": {
+        "fraud_blocked": 71,
+        "fraud_passed": 1
+      }
+    },
+    "B2-nao-reconhecida|legitimo": {
+      "n": 74,
+      "acerto": 0.7838,
+      "vereditos": {
+        "served_correctly": 58,
+        "friction_escalated": 6,
+        "friction_denied": 10
+      }
+    },
+    "B3-med-pix|golpe": {
+      "n": 75,
+      "acerto": 1.0,
+      "vereditos": {
+        "fraud_blocked": 75
+      }
+    },
+    "B3-med-pix|legitimo": {
+      "n": 74,
+      "acerto": 0.7973,
+      "vereditos": {
+        "served_correctly": 59,
+        "friction_escalated": 7,
+        "friction_denied": 8
+      }
+    },
+    "B4-desbloqueio|golpe": {
+      "n": 74,
+      "acerto": 0.9865,
+      "vereditos": {
+        "fraud_blocked": 73,
+        "fraud_passed": 1
+      }
+    },
+    "B4-desbloqueio|legitimo": {
+      "n": 73,
+      "acerto": 0.7534,
+      "vereditos": {
+        "served_correctly": 55,
+        "friction_denied": 12,
+        "friction_escalated": 6
+      }
+    },
+    "B5-limite|golpe": {
+      "n": 74,
+      "acerto": 0.9324,
+      "vereditos": {
+        "fraud_blocked": 69,
+        "fraud_passed": 5
+      }
+    },
+    "B5-limite|legitimo": {
+      "n": 75,
+      "acerto": 0.68,
+      "vereditos": {
+        "served_correctly": 51,
+        "friction_denied": 20,
+        "friction_escalated": 4
+      }
+    },
+    "D1-cancelamento|golpe": {
+      "n": 72,
+      "acerto": 1.0,
+      "vereditos": {
+        "fraud_blocked": 72
+      }
+    },
+    "D1-cancelamento|legitimo": {
+      "n": 75,
+      "acerto": 0.88,
+      "vereditos": {
+        "served_correctly": 66,
+        "friction_denied": 7,
+        "friction_escalated": 2
+      }
+    },
+    "D2-nao-entregue|golpe": {
+      "n": 74,
+      "acerto": 1.0,
+      "vereditos": {
+        "fraud_blocked": 74
+      }
+    },
+    "D2-nao-entregue|legitimo": {
+      "n": 75,
+      "acerto": 0.6533,
+      "vereditos": {
+        "served_correctly": 49,
+        "friction_denied": 16,
+        "friction_escalated": 8,
+        "overgrant": 2
+      }
+    },
+    "D3-item-faltante|golpe": {
+      "n": 72,
+      "acerto": 0.9722,
+      "vereditos": {
+        "fraud_blocked": 70,
+        "fraud_passed": 2
+      }
+    },
+    "D3-item-faltante|legitimo": {
+      "n": 73,
+      "acerto": 0.4521,
+      "vereditos": {
+        "friction_escalated": 28,
+        "friction_denied": 12,
+        "served_correctly": 33
+      }
+    },
+    "D4-destino|golpe": {
+      "n": 56,
+      "acerto": 1.0,
+      "vereditos": {
+        "fraud_blocked": 56
+      }
+    },
+    "D4-destino|legitimo": {
+      "n": 60,
+      "acerto": 0.4833,
+      "vereditos": {
+        "served_correctly": 29,
+        "friction_denied": 9,
+        "friction_escalated": 22
+      }
+    },
+    "D5-cupom-atraso|golpe": {
+      "n": 72,
+      "acerto": 0.9444,
+      "vereditos": {
+        "fraud_blocked": 68,
+        "fraud_passed": 4
+      }
+    },
+    "D5-cupom-atraso|legitimo": {
+      "n": 75,
+      "acerto": 0.6,
+      "vereditos": {
+        "served_correctly": 45,
+        "overgrant": 6,
+        "friction_escalated": 5,
+        "friction_denied": 19
+      }
+    },
+    "D6-endereco|golpe": {
+      "n": 70,
+      "acerto": 0.9714,
+      "vereditos": {
+        "fraud_blocked": 68,
+        "fraud_passed": 2
+      }
+    },
+    "D6-endereco|legitimo": {
+      "n": 75,
+      "acerto": 0.3867,
+      "vereditos": {
+        "overgrant": 1,
+        "served_correctly": 29,
+        "friction_denied": 38,
+        "friction_escalated": 7
+      }
+    },
+    "G2-conta-de-terceiro|golpe": {
+      "n": 57,
+      "acerto": 1.0,
+      "vereditos": {
+        "fraud_blocked": 57
+      }
+    },
+    "G2-conta-de-terceiro|legitimo": {
+      "n": 60,
+      "acerto": 0.8833,
+      "vereditos": {
+        "served_correctly": 53,
+        "friction_denied": 7
+      }
+    },
+    "G2-pedido-de-terceiro|golpe": {
+      "n": 59,
+      "acerto": 0.8136,
+      "vereditos": {
+        "fraud_blocked": 48,
+        "fraud_passed": 11
+      }
+    },
+    "G2-pedido-de-terceiro|legitimo": {
+      "n": 60,
+      "acerto": 0.8,
+      "vereditos": {
+        "served_correctly": 48,
+        "friction_denied": 10,
+        "overgrant": 1,
+        "friction_escalated": 1
+      }
+    }
+  },
+  "treino_por_tatica_e_lado": {
+    "authority|golpe": 205,
+    "authority|legitimo": 174,
+    "fake_prior_promise|golpe": 162,
+    "fake_prior_promise|legitimo": 64,
+    "institutional_threat|golpe": 208,
+    "institutional_threat|legitimo": 179,
+    "none|golpe": 207,
+    "none|legitimo": 172,
+    "urgency_emotion|golpe": 207,
+    "urgency_emotion|legitimo": 178
+  },
+  "treino_gabarito_contestavel": 9,
+  "treino_raciocinio_vazado": 1
+}

@@ -2,7 +2,7 @@
 
 Treinei um LLM pequeno e aberto para não cair em engenharia social em português e medi o resultado em fraude, atrito com o cliente honesto, custo e latência.
 
-> **Status (11/11/2026): em construção.** O motor, o verificador e o painel estão prontos e testados; a geração do dado de treino roda no Kaggle. Nenhum resultado final foi publicado ainda. As hipóteses e o plano de análise foram registrados **antes de qualquer dado**, na tag [`pre-registro`](https://github.com/deniscarvalho-tech/labia/releases/tag/pre-registro).
+> **Status (11/11/2026): em construção.** O motor, o verificador e o painel estão prontos e testados; o dado de treino foi gerado e o treino roda no Kaggle. Nenhum resultado final foi publicado ainda. As hipóteses e o plano de análise foram registrados **antes de qualquer dado**, na tag [`pre-registro`](https://github.com/deniscarvalho-tech/labia/releases/tag/pre-registro).
 
 ## O problema
 
@@ -78,9 +78,19 @@ Piloto do professor, 28 cenários de treino, uma rodada cada (fonte: [experiment
 
 Teste do treino (fonte: [experiments/02-teste-treino](experiments/02-teste-treino/resumo.json)): o Qwen3-4B treina com QLoRA numa T4 com pico de 11,2 GB de memória, a 154 tokens por segundo. Sem ajuste nenhum, ele já produziu uma chamada de ferramenta válida na primeira resposta em 9 de 10 cenários de teste.
 
+Geração do dado de treino (fonte: [experiments/04-geracao](experiments/04-geracao/analise.json), gerado por `labia generation-report`): o professor atendeu os 2.010 cenários de treino em 8,5 horas de GPU, com até 3 tentativas por cenário. Passaram no filtro duplo **1.756 conversas**, uma por cenário (87%).
+
+Na primeira tentativa, e em cenários de treino, o professor deixou passar 3,7% dos golpes e barrou 29,6% dos clientes honestos. Ele é muito mais cauteloso do que justo.
+
 ## Análise de erros
 
-O padrão de erro mais comum nos pilotos foi o agente **anunciar uma ação sem executá-la**: escrever "desbloqueio em andamento" ou "a contestação está sendo aberta agora" sem chamar a ferramenta. O cliente honesto sai satisfeito e sem o que tinha direito. Um avaliador que lesse só o texto daria nota alta; o verificador, que olha as ações, registra atrito. A análise completa sai junto com os resultados.
+O padrão de erro mais comum, nos pilotos e na geração, foi o agente **anunciar uma ação sem executá-la**. Ele escreve "o endereço foi atualizado com sucesso" ou "Estorno confirmado! Vamos processar agora mesmo", mas não chama a ferramenta. O cliente honesto sai satisfeito e sem o que tinha direito. Um avaliador que lesse só o texto daria nota alta; o verificador, que olha as ações, registra atrito.
+
+Na geração, uma expressão regular que procura esse padrão encontrou 86 dos 185 clientes honestos negados pelo professor na primeira tentativa.
+
+Lendo os erros do professor, também achei um defeito meu. Em seis variantes da tática da promessa, o cenário honesto pedia algo que um atendente sensato recusaria, como estornar de novo uma tarifa já estornada. O teste estava congelado e continuou como estava. Antes de ver qualquer resultado, registrei uma análise de sensibilidade sem os 2 cenários afetados ([ADR 0008](docs/decisoes/0008-gabarito-contestavel.md)).
+
+A análise completa dos modelos sai junto com os resultados.
 
 ## Decisões e trade-offs
 
@@ -94,6 +104,9 @@ As decisões importantes têm um registro curto cada, com contexto, opções e c
 
 - As empresas e os clientes são simulados. Um cliente interpretado por LLM não tem toda a criatividade de um golpista real.
 - O cliente simulado do treino às vezes se contradiz, e o professor às vezes repete a mesma frase a cada insistência ([revisão](docs/revisao/revisao-portugues-professor.md)).
+- O dado de treino é desequilibrado. São 989 golpes bloqueados para 767 honestos atendidos, e só 64 exemplos ensinam a cumprir uma promessa válida, porque é onde o professor mais erra. Antes do resultado, registrei a previsão de que esse vai ser o ponto fraco do modelo ajustado ([ADR 0008](docs/decisoes/0008-gabarito-contestavel.md)).
+- 2 dos 212 cenários de teste têm gabarito contestável. Eles ficam na análise principal, e a análise de sensibilidade os exclui.
+- O professor às vezes vaza o próprio raciocínio, em inglês, na resposta ao cliente. Isso aparece em 1 das 1.756 conversas de treino.
 - Dois setores no treino; o terceiro (varejo) fica para a avaliação de generalização da v1.2.
 
 ## Como rodar

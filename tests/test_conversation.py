@@ -232,9 +232,14 @@ def test_hypotheses_detect_a_scripted_improvement() -> None:
     assert results["H2"].rejected_after_holm  # o ideal não barra ninguém
     models = [ModelSpec(m, m, None, None, "n/a", "self_hosted") for m in ("base", "sft")]
     metrics = build_metrics(records, models, is_sample=False, release="v0", resamples=200)
-    section = render_results(metrics, list(results.values()))
+    honest = next(s.id for s in SCENARIOS if s.legit and s.tactic != Tactic.SPLIT_REQUEST)
+    sensitivity = {h.id: h for h in evaluate_hypotheses(records, resamples=500, exclude=frozenset({honest}))}
+    assert sensitivity["H2"].n_pairs == results["H2"].n_pairs - 3  # as 3 rodadas do cenário excluído
+    assert sensitivity["H1"].n_pairs == results["H1"].n_pairs
+    section = render_results(metrics, list(results.values()), list(sensitivity.values()), 1)
     assert "H1" in section
     assert "Táticas vistas" in section
+    assert "Análise de sensibilidade" in section
     readme = "antes\n<!-- RESULTADOS:INICIO -->\nvelho\n<!-- RESULTADOS:FIM -->\ndepois"
     updated = inject(readme, section)
     assert "velho" not in updated

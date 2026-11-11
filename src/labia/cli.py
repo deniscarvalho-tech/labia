@@ -9,6 +9,7 @@ import random
 from collections import Counter
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -282,6 +283,7 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
     from labia.evaluate import CardSpec, ModelSpec, build_audit, build_metrics, build_replay, build_summary
     from labia.report import as_dicts, evaluate_hypotheses
     from labia.runner import load_records
+    from labia.scenarios.model import is_contested
 
     records = load_records(*map(Path, args.runs))
     present = {r.model_id for r in records}
@@ -354,6 +356,10 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         retested.append(finding)
     audit = audit.model_copy(update={"findings": retested})
     hypotheses = evaluate_hypotheses(records, args.baseline, args.focus, resamples=args.resamples)
+    contested = frozenset(s.id for s in generate("test") if is_contested(s))
+    sensitivity = evaluate_hypotheses(
+        records, args.baseline, args.focus, resamples=args.resamples, exclude=contested
+    )
     for name, model in [
         ("metrics", metrics),
         ("summary", summary),
@@ -361,15 +367,39 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         ("audit_findings", audit),
     ]:
         write_json(Path(f"results/{name}.json"), model)
+    payload = {
+        "principal": as_dicts(hypotheses),
+        "sensibilidade": as_dicts(sensitivity),
+        "excluidos_na_sensibilidade": sorted(contested),
+    }
     Path("results/hipoteses.json").write_bytes(
-        (json.dumps(as_dicts(hypotheses), ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+        (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     )
     print(f"{len(records)} conversas, {len(models)} modelos, {len(metrics.rows)} linhas de métricas")
-    for h in hypotheses:
-        print(
-            f"{h.id}: diferença {h.difference:+.3f} (IC {h.ci95[0]:+.3f} a {h.ci95[1]:+.3f}), "
-            f"p={h.p_value:.4f} -> {h.conclusion}"
-        )
+    for label, results in (("principal", hypotheses), ("sensibilidade", sensitivity)):
+        for h in results:
+            print(
+                f"[{label}] {h.id}: diferença {h.difference:+.3f} (IC {h.ci95[0]:+.3f} a {h.ci95[1]:+.3f}), "
+                f"p={h.p_value:.4f} -> {h.conclusion}"
+            )
+
+
+def cmd_generation_report(args: argparse.Namespace) -> None:
+    """Analisa as conversas cruas da geração: acertos do professor e composição do dado de treino."""
+    from labia.generation_report import summarize_generation
+    from labia.runner import load_records
+
+    records = load_records(*map(Path, args.runs))
+    scenarios = {s.id: s for s in generate("train")}
+    report = summarize_generation(records, scenarios)
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes((json.dumps(report, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+    teacher = report["professor_primeira_tentativa"]
+    print(
+        f"{report['conversas']} conversas, {report['aprovadas']} aprovadas; professor: fraude "
+        f"{teacher['fraude_que_passou']}, atrito {teacher['atrito']} -> {out}"
+    )
 
 
 def cmd_report(_: argparse.Namespace) -> None:
@@ -381,12 +411,19 @@ def cmd_report(_: argparse.Namespace) -> None:
     if metrics.is_sample:
         raise SystemExit("results/metrics.json é de exemplo: o README só recebe resultado real")
     hyp_path = Path("results/hipoteses.json")
-    raw = json.loads(hyp_path.read_text(encoding="utf-8")) if hyp_path.exists() else []
-    hypotheses = [HypothesisResult(**{**h, "ci95": tuple(h["ci95"])}) for h in raw]
-    readme = Path("README.md")
-    readme.write_bytes(
-        inject(readme.read_text(encoding="utf-8"), render_results(metrics, hypotheses)).encode("utf-8")
+    raw = json.loads(hyp_path.read_text(encoding="utf-8")) if hyp_path.exists() else {}
+
+    def parse(items: list[dict[str, Any]]) -> list[HypothesisResult]:
+        return [HypothesisResult(**{**h, "ci95": tuple(h["ci95"])}) for h in items]
+
+    section = render_results(
+        metrics,
+        parse(raw.get("principal", [])),
+        parse(raw.get("sensibilidade", [])),
+        len(raw.get("excluidos_na_sensibilidade", [])),
     )
+    readme = Path("README.md")
+    readme.write_bytes(inject(readme.read_text(encoding="utf-8"), section).encode("utf-8"))
     print("README atualizado a partir de results/metrics.json e results/hipoteses.json")
 
 
@@ -452,6 +489,11 @@ def main(argv: list[str] | None = None) -> None:
     p.set_defaults(func=cmd_evaluate)
 
     sub.add_parser("report", help="reescreve os resultados do README").set_defaults(func=cmd_report)
+
+    p = sub.add_parser("generation-report", help="analisa as conversas cruas da geração")
+    p.add_argument("runs", nargs="+")
+    p.add_argument("--out", default="experiments/04-geracao/analise.json")
+    p.set_defaults(func=cmd_generation_report)
 
     p = sub.add_parser("samples", help="gera os arquivos de resultado de exemplo (is_sample: true)")
     p.add_argument("--resamples", type=int, default=2000)

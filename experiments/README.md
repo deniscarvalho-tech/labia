@@ -9,5 +9,6 @@ O resumo de cada execução no Kaggle, como saiu do notebook. Nenhum número aqu
 | `01-piloto-professor-v2` | `01-piloto-professor` (versão 2) | `5e58662` | os dois candidatos a professor, de novo | gpt-oss-20b escolhido pela regra definida antes do piloto |
 | `02-teste-treino` | `02-teste-treino` | `cf41166` | QLoRA do aluno numa T4 | funciona (pico de 11,2 GB), mas só 154 tokens/s |
 | `03-velocidade-treino` | `03-velocidade-treino` | `4e001af` | alternativas mais rápidas | todas falharam por incompatibilidade de versão (corrigida em `ab3c24e`); o notebook de treino passou a medir e escolher sozinho |
+| `04-geracao` | `04-geracao-fatia-1` e `-2` | `4e001af` | a geração do dado de treino com o professor | 1.756 conversas aprovadas de 2.010 cenários (87%) em 8,5 h de GPU; professor deixa passar 3,7% dos golpes e barra 29,6% dos honestos na primeira tentativa (`analise.json`, de `labia generation-report`) |
 
 Os dados completos de cada execução (todas as conversas) ficam fora do git, em `data/`, e vão para o Hugging Face.

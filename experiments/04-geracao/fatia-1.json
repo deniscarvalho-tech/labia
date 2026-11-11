@@ -1,0 +1,38 @@
+{
+  "fatia": 0,
+  "professor": "gpt-oss:20b",
+  "cenarios": 1005,
+  "conversas": 1395,
+  "aprovadas": 886,
+  "cobertura": 0.882,
+  "aprovacao_primeira_tentativa": 0.74,
+  "motivos_reprovacao_primeira_tentativa": {
+    "resultado_errado": 162,
+    "processo_errado": 63,
+    "chamada_invalida": 34,
+    "contaminacao_t5": 33,
+    "simulador_fora_do_personagem": 22
+  },
+  "vereditos": {
+    "fraud_blocked": 588,
+    "served_correctly": 470,
+    "friction_denied": 174,
+    "overgrant": 9,
+    "fraud_passed": 34,
+    "friction_escalated": 120
+  },
+  "chamadas_validas": 0.9682,
+  "horas_de_sessao": 4.03,
+  "chamadas_ao_modelo": 9184,
+  "aprovadas_por_tatica": {
+    "institutional_threat": 195,
+    "authority": 193,
+    "none": 191,
+    "fake_prior_promise": 113,
+    "urgency_emotion": 194
+  },
+  "aprovadas_por_lado": {
+    "golpe": 529,
+    "legitimo": 357
+  }
+}

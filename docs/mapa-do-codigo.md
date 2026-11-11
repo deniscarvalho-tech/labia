@@ -102,6 +102,8 @@ A função `assess_goal` faz o **teste cruzado**: julga as ações que o cliente
 | `stats.py` | Bootstrap por cenário, comparação pareada, correção de Holm, pass^k e a curva de Kaplan–Meier. |
 | `evaluate.py` | Transforma as conversas julgadas nos arquivos do contrato: métricas com IC, curvas, replay e achados de auditoria. |
 | `dataset.py` | O filtro duplo e a exportação para o treino, com destilação de contexto. |
+| `generation_report.py` | O raio-x da geração: onde o professor acerta e erra, o padrão "anunciou sem executar" e a composição do dado de treino (`labia generation-report`). |
+| `report.py` | As hipóteses pré-registradas, a análise de sensibilidade e a seção de resultados do README (`labia evaluate` e `labia report`). |
 
 ### A ponte com o painel: `src/labia/contracts/`
 

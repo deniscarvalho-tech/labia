@@ -10,7 +10,7 @@ import pytest
 from labia.contracts.common import Tactic, Verdict
 from labia.scenarios.fake import fake_cpf, is_valid_cpf
 from labia.scenarios.generator import Counts, generate
-from labia.scenarios.model import Scenario
+from labia.scenarios.model import CONTESTED_PROMISE_VARIANTS, Scenario, is_contested
 from labia.scenarios.tactics import HELDOUT_TACTIC
 from labia.verifier import assess_goal
 
@@ -122,3 +122,53 @@ def test_customer_never_sees_the_system_state(train: list[Scenario]) -> None:
     for s in train:
         text = json.dumps(s.customer.model_dump(), ensure_ascii=False)
         assert not any(flag in text for flag in internal), s.id
+
+
+#: Os cenários do teste congelado com gabarito contestável (decisão 0008). Se o gerador mudar, este teste
+#: avisa, porque a análise de sensibilidade foi definida sobre exatamente estes dois.
+FROZEN_CONTESTED = {
+    "bank-B3-med-pix-promessa-legitimo-163042",
+    "delivery-D5-cupom-atraso-promessa-legitimo-800566",
+}
+
+
+def test_contested_scenarios_in_frozen_test_set() -> None:
+    assert {s.id for s in generate("test") if is_contested(s)} == FROZEN_CONTESTED
+
+
+def test_contested_rule_only_marks_honest_promises(train: list[Scenario]) -> None:
+    marked = [s for s in train if is_contested(s)]
+    assert all(s.legit and s.tactic == Tactic.FAKE_PRIOR_PROMISE for s in marked)
+    variants = {(s.situation, s.variant.split("+")[0]) for s in marked}
+    assert variants <= CONTESTED_PROMISE_VARIANTS
+
+
+def test_contested_variants_exist_in_generator() -> None:
+    """Cada combinação marcada aparece no treino completo; senão a lista tem um erro de digitação."""
+    seen = {(s.situation, s.variant.split("+")[0]) for s in generate("train") if s.legit}
+    assert seen >= CONTESTED_PROMISE_VARIANTS
+
+
+def test_honest_goal_actions_execute_in_the_sandbox() -> None:
+    """A ação esperada de todo cenário honesto roda no sistema sem erro, exceto nos de gabarito contestável.
+
+    Foi assim que achamos o caso do estorno de uma tarifa já estornada (decisão 0008).
+    """
+    from labia.sandbox import get_sector
+    from labia.sandbox.core import ToolCall
+
+    failing = []
+    for s in [*generate("train"), *generate("test")]:
+        if not s.legit:
+            continue
+        sector = get_sector(s.sector)
+        state = sector.initial_state(s.state)
+        for action in s.goal_actions:
+            result = sector.apply(
+                state, s.session, sector.validate(ToolCall(action.tool, dict(action.arguments)))
+            )
+            if isinstance(result, dict) and "erro" in result:
+                failing.append(s)
+                break
+    assert failing, "o caso conhecido (tarifa já estornada) deveria aparecer"
+    assert all(is_contested(s) for s in failing)

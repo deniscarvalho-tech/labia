@@ -7,6 +7,10 @@ Hipóteses registradas na tag `pre-registro` (docs/plano.md, seção 1):
 - H3: o SFT deixa passar menos fraude que o base na tática que ficou fora do treino.
 
 Comparação por bootstrap pareado nos mesmos cenários e rodadas; correção de Holm-Bonferroni com alfa 0,05.
+
+Análise de sensibilidade (definida em 11/11/2026, antes de qualquer resultado da avaliação, na decisão 0008):
+as mesmas hipóteses sem os cenários de gabarito contestável. A análise principal continua sendo a do teste
+inteiro, como pré-registrado.
 """
 
 from __future__ import annotations
@@ -36,14 +40,24 @@ class HypothesisResult:
 
 
 def _paired(
-    records: list[ConversationRecord], a: str, b: str, legit: bool, split: Split
+    records: list[ConversationRecord],
+    a: str,
+    b: str,
+    legit: bool,
+    split: Split,
+    exclude: frozenset[str] = frozenset(),
 ) -> tuple[list[str], list[float], list[float]]:
     def key(r: ConversationRecord) -> tuple[str, int]:
         return (r.scenario_id, r.run)
 
     def select(model: str) -> dict[tuple[str, int], ConversationRecord]:
         return {
-            key(r): r for r in records if r.model_id == model and r.legit == legit and split_of(r) == split
+            key(r): r
+            for r in records
+            if r.model_id == model
+            and r.legit == legit
+            and split_of(r) == split
+            and r.scenario_id not in exclude
         }
 
     ra, rb = select(a), select(b)
@@ -65,6 +79,7 @@ def evaluate_hypotheses(
     *,
     resamples: int = 10_000,
     seed: int = 0,
+    exclude: frozenset[str] = frozenset(),
 ) -> list[HypothesisResult]:
     specs = [
         (
@@ -83,7 +98,7 @@ def evaluate_hypotheses(
     ]
     raw = []
     for hid, text, legit, split in specs:
-        clusters, va, vb = _paired(records, base, sft, legit, split)
+        clusters, va, vb = _paired(records, base, sft, legit, split, exclude)
         if not clusters:
             continue
         ones = [1.0] * len(clusters)
@@ -142,7 +157,23 @@ def _ci(ci: tuple[float, float] | None) -> str:
     return f"{_pct(ci[0])} a {_pct(ci[1])}" if ci else "—"
 
 
-def render_results(metrics: MetricsFile, hypotheses: list[HypothesisResult]) -> str:
+def _hypothesis_table(hypotheses: list[HypothesisResult]) -> list[str]:
+    lines = ["| | Hipótese | Diferença | IC 95% | p | Pares | Resultado |", "|---|---|---|---|---|---|---|"]
+    for h in hypotheses:
+        lines.append(
+            f"| {h.id} | {h.statement} | {h.difference * 100:+.1f} p.p. | "
+            f"{h.ci95[0] * 100:+.1f} a {h.ci95[1] * 100:+.1f} p.p. | {h.p_value:.4f} | {h.n_pairs} | "
+            f"{h.conclusion} |"
+        )
+    return lines
+
+
+def render_results(
+    metrics: MetricsFile,
+    hypotheses: list[HypothesisResult],
+    sensitivity: list[HypothesisResult] | None = None,
+    n_excluded: int = 0,
+) -> str:
     """A seção de resultados do README. Cada número vem de metrics.json ou do teste de hipóteses."""
     lines = [
         f"Avaliação de `{metrics.release}`, commit `{metrics.git_sha}`. Cada cenário rodou 3 vezes; os intervalos "
@@ -178,15 +209,19 @@ def render_results(metrics: MetricsFile, hypotheses: list[HypothesisResult]) -> 
             "Diferença = SFT menos base, nos mesmos cenários e rodadas (bootstrap pareado, 10.000 reamostragens), "
             "com correção de Holm-Bonferroni.",
             "",
-            "| | Hipótese | Diferença | IC 95% | p | Resultado |",
-            "|---|---|---|---|---|---|",
+            *_hypothesis_table(hypotheses),
+            "",
         ]
-        for h in hypotheses:
-            lines.append(
-                f"| {h.id} | {h.statement} | {h.difference * 100:+.1f} p.p. | "
-                f"{h.ci95[0] * 100:+.1f} a {h.ci95[1] * 100:+.1f} p.p. | {h.p_value:.4f} | {h.conclusion} |"
-            )
-        lines.append("")
+    if sensitivity:
+        lines += [
+            "#### Análise de sensibilidade",
+            "",
+            f"As mesmas hipóteses sem os {n_excluded} cenários de gabarito contestável "
+            "([decisão 0008](docs/decisoes/0008-gabarito-contestavel.md)), definida antes de qualquer resultado.",
+            "",
+            *_hypothesis_table(sensitivity),
+            "",
+        ]
     return "\n".join(lines)
 
 
