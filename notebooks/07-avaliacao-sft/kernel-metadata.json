@@ -1,0 +1,17 @@
+{
+  "id": "deniscarvalhotech/labia-07-avaliacao-sft",
+  "title": "Labia 07 - avaliacao sft",
+  "code_file": "avaliacao.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [
+    "deniscarvalhotech/labia-06-treino-sft"
+  ],
+  "model_sources": []
+}
