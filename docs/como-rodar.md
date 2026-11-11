@@ -161,10 +161,16 @@ uv run labia generation-report data/geracao/fatia-1/geracao/runs.jsonl data/gera
 # das conversas da avaliação aos results/*.json reais, com as hipóteses e a análise de sensibilidade
 uv run labia evaluate data/avaliacao/*.jsonl
 
-# a seção de resultados do README e os cards do Hugging Face, escritos a partir de results/
+# custo estimado por mil conversas e ponto de equilíbrio GPU própria × API (preços em configs/precos.json)
+uv run labia cost data/avaliacao/*.jsonl --sessions data/avaliacao/*/resumo.json
+
+# os gráficos (docs/img, tema claro e escuro), a seção de resultados do README e os cards do Hugging Face
+make charts
 uv run labia report
 uv run labia cards
 ```
+
+Todos esses comandos recusam dado de exemplo.
 
 `labia evaluate` imprime as hipóteses H1 a H3 duas vezes: a análise principal e a de sensibilidade, sem os 2 cenários de gabarito contestável ([ADR 0008](decisoes/0008-gabarito-contestavel.md)).
 

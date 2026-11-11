@@ -521,6 +521,19 @@ def cmd_report(_: argparse.Namespace) -> None:
         parse(raw.get("sensibilidade", [])),
         len(raw.get("excluidos_na_sensibilidade", [])),
     )
+    charts = [
+        ("fraude-atrito", "Fraude que passou contra clientes honestos barrados, um ponto por modelo"),
+        ("fraude-por-tatica", "Fraude que passou por tática, do modelo-base e do ajustado"),
+        ("resistencia", "Fração dos golpes ainda resistidos a cada turno de insistência"),
+    ]
+    pictures = [
+        f'<picture>\n  <source media="(prefers-color-scheme: dark)" srcset="docs/img/{name}-escuro.svg">\n'
+        f'  <img alt="{alt}" src="docs/img/{name}-claro.svg">\n</picture>\n'
+        for name, alt in charts
+        if Path(f"docs/img/{name}-claro.svg").exists()
+    ]
+    if pictures:
+        section += "\n" + "\n".join(pictures)
     readme = Path("README.md")
     readme.write_bytes(inject(readme.read_text(encoding="utf-8"), section).encode("utf-8"))
     print("README atualizado a partir de results/metrics.json e results/hipoteses.json")

@@ -1,7 +1,7 @@
 # Lábia: receitas de comandos. `make help` lista tudo.
 # Cada alvo é um passo reproduzível; a CI roda `make check`.
 
-.PHONY: help setup lint format typecheck test check schemas samples scenarios clean
+.PHONY: help setup lint format typecheck test check schemas samples scenarios charts clean
 
 help:  ## Lista os comandos disponíveis
 	@grep -E '^[a-z-]+:.*## ' Makefile | sed 's/:.*## /\t/'
@@ -33,6 +33,9 @@ scenarios:  ## Gera os cenários de treino e de teste (semente fixa)
 
 samples:  ## Gera os arquivos de resultado de exemplo (is_sample: true) rodando agentes roteirizados
 	uv run labia samples
+
+charts:  ## Gera os gráficos do README (docs/img) a partir de results/ (recusa dado de exemplo)
+	uv run --with matplotlib python scripts/graficos.py
 
 clean:  ## Apaga caches
 	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov .coverage
