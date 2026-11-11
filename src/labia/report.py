@@ -16,6 +16,7 @@ inteiro, como pré-registrado.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from typing import Any
 
 from labia.contracts.common import MetricName, Sector, Split, Tactic, Verdict
 from labia.contracts.metrics import MetricsFile
@@ -128,12 +129,14 @@ def evaluate_hypotheses(
                 if rejected[hid]
                 else "não confirmada: não dá para descartar piora de 5 p.p. ou mais no atrito"
             )
+        elif rejected[hid]:
+            conclusion = "confirmada: a redução de fraude é significativa"
+        elif diff.ci95[0] > 0:
+            # O teste é unilateral (o SFT reduz a fraude?). Quando o intervalo inteiro fica acima de zero, a
+            # resposta não é "pode ser acaso": a fraude aumentou, e o texto precisa dizer isso.
+            conclusion = "não confirmada: a fraude aumentou (o intervalo inteiro fica acima de zero)"
         else:
-            conclusion = (
-                "confirmada: a redução de fraude é significativa"
-                if rejected[hid]
-                else "não confirmada: a diferença pode ser acaso"
-            )
+            conclusion = "não confirmada: a diferença pode ser acaso"
         out.append(
             HypothesisResult(
                 hid,
@@ -153,6 +156,10 @@ def _pct(v: float) -> str:
     return f"{v * 100:.1f}%".replace(".", ",")
 
 
+def _pp(v: float) -> str:
+    return f"{v * 100:+.1f}".replace(".", ",")
+
+
 def _ci(ci: tuple[float, float] | None) -> str:
     return f"{_pct(ci[0])} a {_pct(ci[1])}" if ci else "—"
 
@@ -160,11 +167,90 @@ def _ci(ci: tuple[float, float] | None) -> str:
 def _hypothesis_table(hypotheses: list[HypothesisResult]) -> list[str]:
     lines = ["| | Hipótese | Diferença | IC 95% | p | Pares | Resultado |", "|---|---|---|---|---|---|---|"]
     for h in hypotheses:
+        p = f"{h.p_value:.4f}".replace(".", ",")
         lines.append(
-            f"| {h.id} | {h.statement} | {h.difference * 100:+.1f} p.p. | "
-            f"{h.ci95[0] * 100:+.1f} a {h.ci95[1] * 100:+.1f} p.p. | {h.p_value:.4f} | {h.n_pairs} | "
-            f"{h.conclusion} |"
+            f"| {h.id} | {h.statement} | {_pp(h.difference)} p.p. | "
+            f"{_pp(h.ci95[0])} a {_pp(h.ci95[1])} p.p. | {p} | {h.n_pairs} | {h.conclusion} |"
         )
+    return lines
+
+
+def _summary(metrics: MetricsFile, hypotheses: list[HypothesisResult], base: str, focus: str) -> list[str]:
+    """O resultado em quatro frases, com os números tirados das mesmas linhas das tabelas."""
+    names = {m.id: m.label for m in metrics.models}
+    if base not in names or focus not in names:
+        return []
+
+    def value(model: str, metric: MetricName, split: Split) -> float | None:
+        row = find_row(metrics, model, metric, split, Sector.ALL, Tactic.ALL)
+        return row.value if row else None
+
+    verdict = {h.id: h for h in hypotheses}
+
+    def sentence(label: str, metric: MetricName, split: Split, hid: str) -> str | None:
+        a, b = value(base, metric, split), value(focus, metric, split)
+        if a is None or b is None or hid not in verdict:
+            return None
+        h = verdict[hid]
+        if h.rejected_after_holm:
+            how = "diferença significativa"
+        elif h.ci95[0] > 0:
+            how = "piorou: o intervalo da diferença fica inteiro acima de zero"
+        elif h.ci95[1] < 0 and hid != "H2":
+            how = "caiu, mas sem significância depois da correção"
+        else:
+            how = "sem diferença significativa"
+        return f"- **{label}:** de {_pct(a)} para {_pct(b)} ({how})."
+
+    out = [
+        f"**Em resumo**, comparando {names[focus]} com {names[base]}:",
+        "",
+    ]
+    for item in (
+        sentence("Atrito nas táticas vistas no treino", MetricName.FRICTION_RATE, Split.SEEN_TACTICS, "H2"),
+        sentence("Fraude nas táticas vistas no treino", MetricName.FRAUD_RATE, Split.SEEN_TACTICS, "H1"),
+        sentence(
+            "Fraude na tática nunca vista (pedido fatiado)", MetricName.FRAUD_RATE, Split.HELDOUT_TACTIC, "H3"
+        ),
+    ):
+        if item:
+            out.append(item)
+    p3a, p3b = (
+        value(base, MetricName.PASS3, Split.SEEN_TACTICS),
+        value(focus, MetricName.PASS3, Split.SEEN_TACTICS),
+    )
+    if p3a is not None and p3b is not None:
+        out.append(
+            f"- **Acerto nas 3 rodadas (pass^3), táticas vistas:** de {_pct(p3a)} para {_pct(p3b)} (exploratório)."
+        )
+    return [*out, ""]
+
+
+def _cost_table(cost: dict[str, Any], names: dict[str, str]) -> list[str]:
+    lines = [
+        "### Custo e latência (estimados)",
+        "",
+        "| Modelo | Conversas por hora de GPU | US$ por mil conversas | Latência por turno (mediana) |",
+        "|---|---|---|---|",
+    ]
+    for model_id, entry in cost.get("modelos", {}).items():
+        own = entry.get("gpu_propria")
+        api = entry.get("api")
+        rate = f"{own['conversas_por_hora_de_gpu']:.0f}".replace(".", ",") if own else "API"
+        usd = (own or api or {}).get("usd_por_mil_conversas")
+        usd_text = f"{usd:.2f}".replace(".", ",") if usd is not None else "—"
+        lat = entry.get("latencia_turno_p50_s")
+        lat_text = f"{lat:.1f} s".replace(".", ",") if lat is not None else "—"
+        lines.append(f"| {names.get(model_id, model_id)} | {rate} | {usd_text} | {lat_text} |")
+    gpu = cost.get("precos", {}).get("gpu_t4_hora", {})
+    lines += [
+        "",
+        f"Premissas: preço público da T4 (US$ {gpu.get('valor', 0):.2f} por hora, {gpu.get('fonte', '')}, "
+        f"consultado em {gpu.get('consultado_em', '')}); "
+        + " ".join(cost.get("premissas", []))
+        + " Fonte: `results/custo.json`.",
+        "",
+    ]
     return lines
 
 
@@ -173,12 +259,17 @@ def render_results(
     hypotheses: list[HypothesisResult],
     sensitivity: list[HypothesisResult] | None = None,
     n_excluded: int = 0,
+    *,
+    cost: dict[str, Any] | None = None,
+    base: str = "base",
+    focus: str = "sft",
 ) -> str:
-    """A seção de resultados do README. Cada número vem de metrics.json ou do teste de hipóteses."""
+    """A seção de resultados do README. Cada número vem de metrics.json, do teste de hipóteses ou de custo.json."""
     lines = [
         f"Avaliação de `{metrics.release}`, commit `{metrics.git_sha}`. Cada cenário rodou 3 vezes; os intervalos "
         "são de 95%, por bootstrap de cenários inteiros. Fonte: `results/metrics.json`.",
         "",
+        *_summary(metrics, hypotheses, base, focus),
     ]
     for split, title in (
         (Split.SEEN_TACTICS, "Táticas vistas no treino"),

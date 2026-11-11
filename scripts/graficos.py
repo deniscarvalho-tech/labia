@@ -130,6 +130,8 @@ def fraud_friction(metrics: dict[str, Any], t: dict[str, Any], out: Path) -> Non
         "Fraude × atrito, táticas vistas no treino",
         "Cada ponto é um modelo; as barras são intervalos de 95% por bootstrap de cenários. Melhor: embaixo à esquerda.",
     )
+    placed: list[tuple[float, float]] = []
+    top = 0.0
     for m in metrics["models"]:
         fraud = row(metrics, m["id"], "fraud_rate", "seen_tactics")
         fric = row(metrics, m["id"], "friction_rate", "seen_tactics")
@@ -151,11 +153,15 @@ def fraud_friction(metrics: dict[str, Any], t: dict[str, Any], out: Path) -> Non
             label=m["label"],
             zorder=3,
         )
+        top = max(top, fraud["ci95"][1])
         right = fric["value"] > 0.7
+        # Rótulo de um ponto vizinho a outro já rotulado vai para baixo, para os textos não se sobreporem.
+        crowded = any(abs(fric["value"] - x) < 0.15 and abs(fraud["value"] - y) < 0.06 for x, y in placed)
+        placed.append((fric["value"], fraud["value"]))
         ax.annotate(
             m["label"],
             (fric["value"], fraud["value"]),
-            xytext=(-7 if right else 7, 6),
+            xytext=(-7 if right else 7, -14 if crowded else 6),
             textcoords="offset points",
             ha="right" if right else "left",
             fontsize=8.5,
@@ -166,7 +172,7 @@ def fraud_friction(metrics: dict[str, Any], t: dict[str, Any], out: Path) -> Non
     pct_axis(ax.xaxis)
     pct_axis(ax.yaxis)
     ax.set_xlim(-0.03, max(1.0, ax.get_xlim()[1]) + 0.03)
-    ax.set_ylim(-0.03, max(1.0, ax.get_ylim()[1]) + 0.03)
+    ax.set_ylim(-0.02, min(1.0, max(0.4, top + 0.08)))
     rows = legend(fig, ax, t, max_cols=2)
     fig.subplots_adjust(top=0.8 - 0.035 * rows, left=0.1, right=0.97, bottom=0.11)
     fig.savefig(out, facecolor=t["page"])

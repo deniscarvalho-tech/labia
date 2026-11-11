@@ -102,10 +102,12 @@ def test_schemas_on_disk_match_the_models(tmp_path: Path) -> None:
         assert committed.read_text(encoding="utf-8") == (tmp_path / name).read_text(encoding="utf-8"), name
 
 
-def test_publish_check_refuses_sample_data() -> None:
-    """Os arquivos atuais são de exemplo: a publicação tem de ser recusada."""
+def test_publish_check_refuses_sample_data(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Com os arquivos de exemplo, a publicação tem de ser recusada (numa pasta à parte, sem tocar no repo)."""
     from labia.cli import main
 
+    monkeypatch.chdir(tmp_path)
+    main(["samples", "--resamples", "50"])
     with pytest.raises(SystemExit) as exc:
         main(["publish-check"])
     assert exc.value.code == 1
@@ -122,7 +124,7 @@ def test_cards_use_only_result_files() -> None:
     card = dataset_card(generation, manifest)
     assert f"{generation['aprovadas']:,}".replace(",", ".") in card
     assert manifest["files"]["test"]["sha256"][:12] in card
-    sample = MetricsFile.model_validate_json(Path("results/metrics.json").read_text(encoding="utf-8"))
-    assert sample.is_sample
+    current = MetricsFile.model_validate_json(Path("results/metrics.json").read_text(encoding="utf-8"))
+    sample = current.model_copy(update={"is_sample": True})
     with pytest.raises(ValueError, match="resultado real"):
         model_card(sample, {}, {}, generation)

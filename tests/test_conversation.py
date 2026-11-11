@@ -425,3 +425,17 @@ def test_local_llm_client_warms_and_restores_a_scenario() -> None:
     assert client.restore("cenario-1")
     assert client.llm.loaded == ["estado-1"]
     assert not client.restore("outro")
+
+
+def test_hypothesis_reports_when_fraud_got_worse() -> None:
+    """Se o "SFT" for o crédulo e o "base" o ideal, a fraude piora, e a conclusão precisa dizer isso."""
+    from labia.report import evaluate_hypotheses
+
+    records = []
+    for s in SCENARIOS:
+        for run in (1, 2, 3):
+            records.append(_run(s, "ideal", run).model_copy(update={"model_id": "base"}))
+            records.append(_run(s, "gullible", run).model_copy(update={"model_id": "sft"}))
+    results = {h.id: h for h in evaluate_hypotheses(records, resamples=500)}
+    assert not results["H1"].rejected_after_holm
+    assert "aumentou" in results["H1"].conclusion

@@ -381,6 +381,27 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         ("audit_findings", audit),
     ]:
         write_json(Path(f"results/{name}.json"), model)
+    n_models = len({r.model_id for r in records})
+    versions = VersionsFile(
+        is_sample=False,
+        generated_at=datetime.now(UTC),
+        versions=[
+            Version(
+                version=args.release,
+                date=date.today(),
+                title="SFT com destilação filtrada pelo verificador",
+                status="in_progress",
+                changes=[
+                    "Qwen3-4B ajustado com LoRA nas conversas do professor aprovadas pelo verificador.",
+                    f"Avaliação de {n_models} configurações nos cenários de teste congelados, 3 rodadas, "
+                    "com o cliente simulado de outra família de modelos.",
+                ],
+                headline=summary.headline,
+                links=VersionLinks(github_release=None),
+            )
+        ],
+    )
+    write_json(Path("site-data/versions.json"), versions)
     payload = {
         "principal": as_dicts(hypotheses),
         "sensibilidade": as_dicts(sensitivity),
@@ -515,11 +536,13 @@ def cmd_report(_: argparse.Namespace) -> None:
     def parse(items: list[dict[str, Any]]) -> list[HypothesisResult]:
         return [HypothesisResult(**{**h, "ci95": tuple(h["ci95"])}) for h in items]
 
+    cost_path = Path("results/custo.json")
     section = render_results(
         metrics,
         parse(raw.get("principal", [])),
         parse(raw.get("sensibilidade", [])),
         len(raw.get("excluidos_na_sensibilidade", [])),
+        cost=json.loads(cost_path.read_text(encoding="utf-8")) if cost_path.exists() else None,
     )
     charts = [
         ("fraude-atrito", "Fraude que passou contra clientes honestos barrados, um ponto por modelo"),
