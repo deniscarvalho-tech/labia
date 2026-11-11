@@ -4,7 +4,7 @@
 
 Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle · **[pronto p/ rodar]** construído, esperando a vez · **[falta]** ainda não feito · **[você]** depende de você.
 
-Última atualização: 11/11/2026, 12h.
+Última atualização: 11/11/2026, 15h30.
 
 ## 1. Pesquisa e rigor
 
@@ -17,6 +17,7 @@ Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle �
 | Teste congelado por hash (212 cenários) | [pronto] | ninguém consegue mexer no teste depois de ver o treino |
 | Estatística: bootstrap por cenário, comparação pareada, Holm, pass^3, curva de resistência | [pronto] | todo número sai com intervalo de confiança; diferença pequena não vira "melhoria" |
 | Raio-x da geração e gabaritos contestáveis (ADR 0008, tag `sensibilidade`) | [pronto] | achamos um defeito nosso e registramos a correção antes de ver resultados: é honestidade verificável |
+| Defeito no laço: a última fala do cliente era descartada (ADR 0009) | [pronto] corrigido, com teste e trava na análise | a primeira avaliação do base media um artefato; foi refeita antes de qualquer resultado do modelo ajustado |
 | Registro de decisões, ADRs 0001 a 0008 | [pronto] | cada escolha importante tem contexto, opções e motivo |
 
 ## 2. O motor (código)
@@ -56,7 +57,8 @@ Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle �
 | 02. Teste do treino | [pronto] | QLoRA cabe numa T4 (11,2 GB), mas a 154 tokens/s | mostrou que o treino precisava ser mais rápido |
 | 03. Teste de velocidade | [pronto, falhou] | incompatibilidade de versões | virou uma sonda automática dentro do treino |
 | 04. Geração do dado de treino (2 fatias) | [pronto] | 1.756 conversas aprovadas de 2.010 cenários, 8,5 h de GPU | é o dado de treino |
-| 05. Avaliação do modelo-base (padrão e prompt reforçado) | [rodando] desde 10h59 | — | a linha de base: sem ela não dá para dizer que o treino melhorou |
+| 05. Avaliação do modelo-base, versão 1 | [pronto, inválido] | 85% das conversas com a última fala do cliente descartada | achou o defeito do laço (ADR 0009) |
+| 05. Avaliação do modelo-base, versão 2 (laço corrigido) | [rodando] desde 15h15 | — | a linha de base: sem ela não dá para dizer que o treino melhorou |
 | 06. Treino SFT | [rodando] desde 11h35 | — | o modelo Lábia v0 |
 | 06. Treino da ablação, sem o filtro | [pronto p/ rodar] depois do 06 | — | responde "o filtro do verificador faz diferença?" |
 | 07. Avaliação do modelo ajustado e da ablação | [pronto p/ rodar] depois de cada treino | — | as hipóteses H1 a H3 |
@@ -80,7 +82,7 @@ Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle �
 | README no formato de relatório técnico | [pronto] parcial; resultados entram por script | a vitrine do projeto |
 | `experiments/`: o resumo de cada execução | [pronto] | todo número publicado tem fonte |
 | Como rodar, mapa do código | [pronto] | reprodutibilidade |
-| Diário de aprendizados (etapas 1 a 4), glossário, explicação prática | [pronto] | estudo para a entrevista |
+| Diário de aprendizados (etapas 1 a 5), glossário, explicação prática | [pronto] | estudo para a entrevista |
 | Revisão do português do professor | [você] | último critério da escolha do professor |
 
 ## 7. Pendências que dependem de você

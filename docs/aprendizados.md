@@ -717,3 +717,69 @@ A política diz que promessa registrada se cumpre, mas um atendente sensato ques
 
 **5. O que é anunciar sem executar, e por que isso importa para um produto real?**
 "É o agente escrever 'pronto, estornei' sem chamar a ferramenta. Para o cliente, parece resolvido; no sistema, nada aconteceu, e ele volta irritado dias depois. Um juiz que lê só o texto daria nota alta. É o motivo de o meu verificador julgar pelas ações registradas, e não pela conversa."
+
+## Etapa 5 — a primeira avaliação do modelo-base e o defeito no laço (11/11/2026)
+
+### O que foi feito
+
+A avaliação do modelo-base rodou no Kaggle: os 212 cenários de teste × 3 rodadas, com o prompt padrão e com o reforçado. Foram 1.272 conversas em 4 horas de GPU. O resultado parecia um achado forte, mas, depois de lido, **virou um defeito meu**. A avaliação foi refeita.
+
+### O que o número dizia
+
+Dos 318 clientes honestos, o modelo-base atendeu corretamente só 37 e barrou 241 (76%). Número extremo é sinal de alerta: ou o modelo é muito ruim, ou a medida está errada. Antes de publicar, li as conversas.
+
+### O que a leitura mostrou
+
+Dois fenômenos misturados:
+
+1. **Falha real do modelo:** o agente escreve "Estou liberando agora" sem chamar `desbloquear_conta`. O cliente agradece e sai, e o verificador marca atrito, com razão. É o padrão "anunciar sem executar", de novo: 80 dos 241.
+2. **Defeito meu, no laço:**
+   - o agente pergunta "Deseja que eu faça o estorno?";
+   - o cliente simulado responde e se despede na mesma mensagem: "Confirma o aumento. Obrigado [FIM]";
+   - o laço via o `[FIM]` e fechava a conversa **sem entregar a resposta ao agente**.
+
+   O agente que pedia confirmação nunca recebia o "sim". Medi isso em tudo: 85% das conversas da avaliação e 62% da geração terminavam com uma fala do cliente que o agente nunca leu.
+
+### O que eu fiz
+
+- **Corrigi o laço:** a última fala com texto chega ao agente, ele pode agir, e só então a conversa fecha. É o que acontece num chat real: se o cliente diz "sim, pode fazer" e fecha a janela, o atendente ainda executa.
+- **Escrevi um teste que reproduz o caso.** Ele **falha no laço antigo e passa no novo**, e isso prova que pega exatamente esse defeito.
+- **Pus uma trava na análise:** `labia evaluate` recusa conversas do laço antigo. Não dá para analisar o dado inválido por engano.
+- **Guardei a avaliação antiga como inválida** (`experiments/05-avaliacao-base-v1`) e rodei de novo. O modelo ajustado vai ser avaliado com o mesmo laço corrigido.
+- **Registrei a decisão** ([ADR 0009](decisoes/0009-ultima-fala-do-cliente.md)) e a ressalva nos números do professor, que também estavam inflados.
+
+### Por que não comparar base e ajustado com o laço antigo, se os dois sofreriam o mesmo defeito?
+
+Por dois motivos:
+
+- **As taxas absolutas vão para o README**, e estariam erradas.
+- **O defeito não é neutro:** ele pune um estilo de resposta, o de pedir confirmação antes de agir. Se o modelo ajustado tivesse outro estilo que o base, a "melhoria" poderia ser só o estilo escapando do defeito. Comparação justa num instrumento quebrado continua sendo medida errada.
+
+### Conceitos desta etapa
+
+- **Artefato de medição:** um resultado que vem do jeito de medir, e não do que se mede. **Analogia:** um termômetro encostado no aquecedor. Ele mede "febre" em todo mundo, e a febre é do aquecedor.
+- **Teste de regressão:** um teste escrito para um defeito que já aconteceu. Se alguém reintroduzir o defeito, o teste falha. O jeito certo de escrever é conferir que ele **falha** antes da correção; senão, ele pode estar passando por outro motivo.
+- **Validade de constructo:** a medida mede mesmo o que diz medir? "Atrito" deveria medir "o agente negou o que era devido", e não "o agente fez uma pergunta e o laço desligou o telefone".
+
+### Alternativas descartadas
+
+| Alternativa | Por que não |
+|---|---|
+| Publicar os 76% de atrito como "o modelo-base é péssimo" | parte do número era artefato; seria maquiar o resultado (para melhor, inclusive, porque o ajustado pareceria melhorar mais) |
+| Comparar com o laço antigo | o defeito pune um estilo de resposta; não é neutro |
+| Corrigir só o prompt do simulador | o simulador pode desobedecer; a correção tem que estar no laço |
+| Regerar o dado de treino | as conversas aprovadas continuam corretas; o custo seria outra rodada de 8,5 h de GPU |
+
+### Perguntas de entrevista sobre esta etapa
+
+**1. Seu primeiro resultado do modelo-base foi descartado. Isso não é ruim para o projeto?**
+"É o contrário. O número era extremo, 76% de clientes honestos barrados, e eu li as conversas antes de publicar. Achei um defeito no meu laço, que descartava a última fala do cliente. Corrigi, escrevi um teste que falha no código antigo, guardei a avaliação inválida e rodei de novo. Mostrar isso é mais forte do que mostrar um número bonito sem base."
+
+**2. Como você sabe que a correção funciona?**
+"Por três camadas. Um teste de regressão reproduz o caso e falha no laço antigo. Uma trava no comando de análise recusa qualquer conversa em que a última fala do cliente ficou sem resposta. E a nova avaliação passa por essa trava antes de qualquer número."
+
+**3. O defeito afetou o dado de treino?**
+"Não no que entrou. Só entram conversas que o verificador aprovou, e uma conversa aprovada é correta independentemente do defeito. O efeito foi outro: algumas conversas boas foram reprovadas, principalmente as em que o professor pedia confirmação, então o treino viu menos desse estilo. E os números do professor estavam inflados, o que eu deixei registrado."
+
+**4. Se o defeito atingia base e ajustado igualmente, por que refazer?**
+"Porque ele não é neutro. Pune quem pede confirmação, e os dois modelos podem ter estilos diferentes. E as taxas absolutas vão para o relatório. Uma comparação justa num instrumento quebrado continua sendo medida errada."

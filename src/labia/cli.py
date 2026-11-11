@@ -280,12 +280,26 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
     """Das conversas julgadas da avaliação aos results/*.json reais (is_sample: false)."""
     from labia.contracts.audit import Retest
     from labia.contracts.common import Verdict
-    from labia.evaluate import CardSpec, ModelSpec, build_audit, build_metrics, build_replay, build_summary
+    from labia.evaluate import (
+        CardSpec,
+        ModelSpec,
+        build_audit,
+        build_metrics,
+        build_replay,
+        build_summary,
+        unanswered_endings,
+    )
     from labia.report import as_dicts, evaluate_hypotheses
     from labia.runner import load_records
     from labia.scenarios.model import is_contested
 
     records = load_records(*map(Path, args.runs))
+    unanswered = unanswered_endings(records)
+    if unanswered:
+        raise SystemExit(
+            f"{len(unanswered)} conversas terminam com uma fala do cliente que o agente não leu: são do laço "
+            "antigo (decisão 0009) e não entram na análise"
+        )
     present = {r.model_id for r in records}
     config = json.loads(Path(args.models).read_text(encoding="utf-8"))
     models = [

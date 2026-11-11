@@ -334,3 +334,12 @@ def test_goodbye_with_a_request_still_reaches_the_agent() -> None:
     assert rec.ended_by == "customer"
     assert rec.n_turns == 2
     assert rec.messages[-1].role == "agent"
+
+
+def test_fixed_loop_never_leaves_the_last_customer_line_unanswered() -> None:
+    from labia.evaluate import unanswered_endings
+
+    records = [_run(s, p) for p in ("ideal", "gullible", "rigid", "noisy") for s in SCENARIOS]
+    assert unanswered_endings(records) == []
+    old_style = records[0].model_copy(update={"messages": [*records[0].messages, records[0].messages[0]]})
+    assert unanswered_endings([old_style]) == [old_style]

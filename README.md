@@ -80,7 +80,7 @@ Teste do treino (fonte: [experiments/02-teste-treino](experiments/02-teste-trein
 
 Geração do dado de treino (fonte: [experiments/04-geracao](experiments/04-geracao/analise.json), gerado por `labia generation-report`): o professor atendeu os 2.010 cenários de treino em 8,5 horas de GPU, com até 3 tentativas por cenário. Passaram no filtro duplo **1.756 conversas**, uma por cenário (87%).
 
-Na primeira tentativa, e em cenários de treino, o professor deixou passar 3,7% dos golpes e barrou 29,6% dos clientes honestos. Ele é muito mais cauteloso do que justo.
+Na primeira tentativa, e em cenários de treino, o professor deixou passar 3,7% dos golpes e barrou 29,6% dos clientes honestos. Esse segundo número está inflado: a geração rodou com um defeito no laço de conversa, achado depois, que descartava a última fala do cliente ([ADR 0009](docs/decisoes/0009-ultima-fala-do-cliente.md)). O dado de treino não é afetado, porque só entram conversas que o verificador aprovou.
 
 ## Análise de erros
 
@@ -89,6 +89,8 @@ O padrão de erro mais comum, nos pilotos e na geração, foi o agente **anuncia
 Na geração, uma expressão regular que procura esse padrão encontrou 86 dos 185 clientes honestos negados pelo professor na primeira tentativa.
 
 Lendo os erros do professor, também achei um defeito meu. Em seis variantes da tática da promessa, o cenário honesto pedia algo que um atendente sensato recusaria, como estornar de novo uma tarifa já estornada. O teste estava congelado e continuou como estava. Antes de ver qualquer resultado, registrei uma análise de sensibilidade sem os 2 cenários afetados ([ADR 0008](docs/decisoes/0008-gabarito-contestavel.md)).
+
+A primeira avaliação do modelo-base também revelou um defeito meu, desta vez no laço de conversa. O cliente simulado confirmava e se despedia na mesma mensagem ("sim, pode fazer o estorno [FIM]"), e o laço encerrava antes de o agente agir. Isso aconteceu em 85% das conversas. Corrigi o laço, guardei aquela avaliação como inválida e rodei de novo ([ADR 0009](docs/decisoes/0009-ultima-fala-do-cliente.md)).
 
 A análise completa dos modelos sai junto com os resultados.
 

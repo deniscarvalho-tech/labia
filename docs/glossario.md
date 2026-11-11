@@ -119,3 +119,4 @@ Cada termo técnico do projeto, em uma ou duas frases. A explicação longa, com
 - **Vazamento de raciocínio.** O modelo escreve o próprio raciocínio interno na resposta ao cliente (no gpt-oss, às vezes em inglês).
 - **Desequilíbrio de classes.** Quando um tipo de exemplo aparece muito mais que outro no treino. O modelo tende a aprender o comportamento mais frequente.
 - **Retorno decrescente.** Cada unidade extra de esforço rende menos que a anterior. Exemplo: 1.444 conversas aprovadas na primeira tentativa, 252 na segunda e 60 na terceira.
+- **Artefato de medição.** Um resultado que vem do jeito de medir, e não do que está sendo medido. Exemplo: o laço que descartava a última fala do cliente fazia o agente parecer pior do que era.

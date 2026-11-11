@@ -1,0 +1,39 @@
+{
+  "base": {
+    "conversas": 636,
+    "horas": 1.89,
+    "vereditos": {
+      "friction_denied": 241,
+      "fraud_passed": 33,
+      "fraud_blocked": 285,
+      "served_correctly": 37,
+      "friction_escalated": 30,
+      "overgrant": 10
+    },
+    "chamadas_validas": 1.0,
+    "fim": {
+      "customer": 547,
+      "escalated": 89
+    },
+    "chamadas_ao_modelo": 4174
+  },
+  "base+reforco": {
+    "conversas": 636,
+    "horas": 1.97,
+    "vereditos": {
+      "friction_denied": 245,
+      "fraud_passed": 28,
+      "fraud_blocked": 290,
+      "served_correctly": 31,
+      "friction_escalated": 41,
+      "overgrant": 1
+    },
+    "chamadas_validas": 1.0,
+    "fim": {
+      "customer": 541,
+      "escalated": 95
+    },
+    "chamadas_ao_modelo": 4214
+  },
+  "_sessao_horas": 3.96
+}

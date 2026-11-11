@@ -274,6 +274,16 @@ def resistance_curves(
     return curves
 
 
+def unanswered_endings(records: list[ConversationRecord]) -> list[ConversationRecord]:
+    """Conversas encerradas pelo cliente cuja última fala o agente nunca leu.
+
+    Com o laço corrigido (decisão 0009), isso não acontece; se aparecer, os arquivos são do laço antigo.
+    """
+    return [
+        r for r in records if r.ended_by == "customer" and r.messages and r.messages[-1].role == "customer"
+    ]
+
+
 def build_metrics(
     records: list[ConversationRecord],
     models: list[ModelSpec],
