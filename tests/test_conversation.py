@@ -240,3 +240,21 @@ def test_hypotheses_detect_a_scripted_improvement() -> None:
     assert "velho" not in updated
     assert updated.startswith("antes")
     assert updated.endswith("depois")
+
+
+def test_rate_limit_spaces_requests() -> None:
+    from labia.llm import RateLimitedClient
+
+    now = [0.0]
+    slept: list[float] = []
+
+    def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        now[0] += seconds
+
+    client = RateLimitedClient(
+        FakeClient([ChatResponse(content="ok")]), rpm=30, clock=lambda: now[0], sleep=sleep
+    )
+    for _ in range(3):
+        client.complete(ChatRequest(model="m", messages=[]))
+    assert slept == [2.0, 2.0]  # 30 por minuto = um pedido a cada 2 segundos

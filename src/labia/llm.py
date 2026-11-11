@@ -158,3 +158,30 @@ class CachedClient:
         record["cached"] = False
         path.write_bytes(json.dumps(record, ensure_ascii=False).encode("utf-8"))
         return response
+
+
+class RateLimitedClient:
+    """Freio de ritmo para APIs gratuitas: no máximo `rpm` pedidos por minuto, somando todas as threads.
+
+    Respeitar o limite do lado de cá evita os erros 429 e as tentativas desperdiçadas.
+    """
+
+    def __init__(
+        self, inner: ChatClient, rpm: float, clock: Any = time.monotonic, sleep: Any = time.sleep
+    ) -> None:
+        import threading
+
+        self.inner = inner
+        self.interval = 60.0 / rpm
+        self._lock = threading.Lock()
+        self._next = 0.0
+        self._clock, self._sleep = clock, sleep
+
+    def complete(self, request: ChatRequest) -> ChatResponse:
+        with self._lock:
+            now = self._clock()
+            wait = self._next - now
+            self._next = max(now, self._next) + self.interval
+        if wait > 0:
+            self._sleep(wait)
+        return self.inner.complete(request)
