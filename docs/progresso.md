@@ -4,7 +4,7 @@
 
 Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle · **[pronto p/ rodar]** construído, esperando a vez · **[falta]** ainda não feito · **[você]** depende de você.
 
-Última atualização: 11/11/2026, 16h30.
+Última atualização: 11/11/2026, 17h.
 
 ## 1. Pesquisa e rigor
 
@@ -35,6 +35,8 @@ Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle �
 | Contrato de dados (Pydantic → JSON Schema → TypeScript) | [pronto] | o painel e o Python nunca se desencontram |
 | Relatório automático: hipóteses, sensibilidade, seção de resultados do README | [pronto] | nenhum número do README é digitado à mão |
 | Model card e dataset card gerados dos resultados | [pronto] | a publicação no Hugging Face também sai de script |
+| Custo estimado por mil conversas e ponto de equilíbrio GPU própria × API (`labia cost`) | [pronto] espera os resultados | responde "a partir de que volume vale treinar um modelo próprio?" |
+| Gráficos do README, tema claro e escuro (`make charts`) | [pronto] espera os resultados | o relatório precisa de gráficos claros, gerados por script |
 
 ## 3. Engenharia e infraestrutura
 
@@ -63,6 +65,7 @@ Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle �
 | 06. Treino da ablação, sem o filtro | [pronto p/ rodar] com a configuração idêntica; espera vaga e cota | — | responde "o filtro do verificador faz diferença?" |
 | 07. Avaliação do modelo ajustado | [rodando] desde 16h20 | — | as hipóteses H1 a H3 |
 | 07. Avaliação da ablação | [pronto p/ rodar] depois do treino dela | — | o efeito do filtro |
+| 09. O modelo ajustado na CPU (latência da demo, 4 × 8 bits) | [rodando] desde 16h50, só CPU (não gasta cota) | — | garante que a demo ao vivo funciona e mede quanto ela demora |
 | 08. Avaliação pelas APIs (DeepSeek, Gemini) | [pronto p/ rodar] [você] faltam as chaves | — | compara o modelo pequeno com modelos grandes |
 
 ## 5. Produto
@@ -74,7 +77,6 @@ Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle �
 | Demo no Hugging Face: replay lado a lado e "Tente enganar o agente" | [pronto] testada com agente roteirizado | qualquer pessoa entende o problema em 30 segundos jogando |
 | Publicar painel (GitHub Pages), modelo, dataset e demo | [falta] depois da avaliação | — |
 | GIF da demo para o README | [falta] | — |
-| Custo e latência (custo estimado por mil conversas, com fonte do preço) | [falta] depois da avaliação | o critério de custo do projeto |
 
 ## 6. Documentação
 
