@@ -4,7 +4,7 @@
 
 Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle · **[pronto p/ rodar]** construído, esperando a vez · **[falta]** ainda não feito · **[você]** depende de você.
 
-Última atualização: 11/11/2026, 15h30.
+Última atualização: 11/11/2026, 16h30.
 
 ## 1. Pesquisa e rigor
 
@@ -59,9 +59,10 @@ Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle �
 | 04. Geração do dado de treino (2 fatias) | [pronto] | 1.756 conversas aprovadas de 2.010 cenários, 8,5 h de GPU | é o dado de treino |
 | 05. Avaliação do modelo-base, versão 1 | [pronto, inválido] | 85% das conversas com a última fala do cliente descartada | achou o defeito do laço (ADR 0009) |
 | 05. Avaliação do modelo-base, versão 2 (laço corrigido) | [rodando] desde 15h15 | — | a linha de base: sem ela não dá para dizer que o treino melhorou |
-| 06. Treino SFT | [rodando] desde 11h35 | — | o modelo Lábia v0 |
-| 06. Treino da ablação, sem o filtro | [pronto p/ rodar] depois do 06 | — | responde "o filtro do verificador faz diferença?" |
-| 07. Avaliação do modelo ajustado e da ablação | [pronto p/ rodar] depois de cada treino | — | as hipóteses H1 a H3 |
+| 06. Treino SFT | [pronto] | Unsloth QLoRA numa GPU (as outras configurações estouraram a memória); 1,33 época em 4,2 h; perda de 1,48 para 0,35 | o modelo Lábia v0 (ADR 0010) |
+| 06. Treino da ablação, sem o filtro | [pronto p/ rodar] com a configuração idêntica; espera vaga e cota | — | responde "o filtro do verificador faz diferença?" |
+| 07. Avaliação do modelo ajustado | [rodando] desde 16h20 | — | as hipóteses H1 a H3 |
+| 07. Avaliação da ablação | [pronto p/ rodar] depois do treino dela | — | o efeito do filtro |
 | 08. Avaliação pelas APIs (DeepSeek, Gemini) | [pronto p/ rodar] [você] faltam as chaves | — | compara o modelo pequeno com modelos grandes |
 
 ## 5. Produto
@@ -82,7 +83,7 @@ Legenda: **[pronto]** feito e testado · **[rodando]** em execução no Kaggle �
 | README no formato de relatório técnico | [pronto] parcial; resultados entram por script | a vitrine do projeto |
 | `experiments/`: o resumo de cada execução | [pronto] | todo número publicado tem fonte |
 | Como rodar, mapa do código | [pronto] | reprodutibilidade |
-| Diário de aprendizados (etapas 1 a 5), glossário, explicação prática | [pronto] | estudo para a entrevista |
+| Diário de aprendizados (etapas 1 a 6), glossário, explicação prática | [pronto] | estudo para a entrevista |
 | Revisão do português do professor | [você] | último critério da escolha do professor |
 
 ## 7. Pendências que dependem de você

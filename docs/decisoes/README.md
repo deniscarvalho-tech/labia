@@ -26,5 +26,6 @@ Todo ADR tem o mesmo formato:
 | [0007](0007-professor-gpt-oss.md) | O professor é o gpt-oss-20b | aceita (falta a revisão do português) |
 | [0008](0008-gabarito-contestavel.md) | Gabaritos contestáveis na tática da promessa e análise de sensibilidade definida antes dos resultados | aceita |
 | [0009](0009-ultima-fala-do-cliente.md) | A última fala do cliente chega ao agente, e a avaliação do modelo-base roda de novo | aceita |
+| [0010](0010-configuracao-do-treino.md) | O treino roda com QLoRA e Unsloth numa GPU, escolhido por medição | aceita |
 
-ADRs previstos para os próximos dias: LoRA × QLoRA e hiperparâmetros (sexta, no treino), formato e quantização do GGUF (sábado) e estratégia do DPO (v1.1).
+ADRs previstos: formato e quantização do GGUF para a demo na CPU e estratégia do DPO (v1.1).

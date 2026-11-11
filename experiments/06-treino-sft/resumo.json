@@ -1,0 +1,50 @@
+{
+  "notebook": "labia-06-treino-sft (versão 1)",
+  "commit": "ab3c24e",
+  "sondas": {
+    "descricao": "3 passos de cada configuração com as 16 conversas mais longas (pior caso de memória)",
+    "lora16-2gpus": {
+      "resultado": "falhou",
+      "motivo": "memória da GPU esgotada (CUDA out of memory)"
+    },
+    "qlora-2gpus": {
+      "resultado": "falhou",
+      "motivo": "memória da GPU esgotada (CUDA out of memory)"
+    },
+    "lora16-1gpu": {
+      "resultado": "falhou",
+      "motivo": "memória da GPU esgotada (CUDA out of memory)"
+    },
+    "unsloth-qlora-1gpu": {
+      "resultado": "ok",
+      "tokens_por_segundo": 304.8,
+      "pico_memoria_gb": 4.76
+    }
+  },
+  "escolhida": "unsloth-qlora-1gpu",
+  "epocas": 1.33,
+  "treino": {
+    "modo": "qlora",
+    "unsloth": true,
+    "gpus": 1,
+    "passos": 293,
+    "segundos_treino": 15259.6,
+    "tokens_por_segundo": 490.4,
+    "pico_memoria_gb": 4.91,
+    "loss_media": 0.4437,
+    "parou_por_tempo": false
+  },
+  "perda": {
+    "primeiro_registro": 1.4776,
+    "ultimo_registro": 0.3473
+  },
+  "dados": {
+    "exemplos": 1756,
+    "descartados_por_tamanho": 0,
+    "tokens_total": 5605905,
+    "tokens_alvo": 427624,
+    "tokens_mediana": 3133,
+    "tokens_max": 5647
+  },
+  "gguf_q8_0_gb": 3.99
+}

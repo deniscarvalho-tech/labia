@@ -783,3 +783,64 @@ Por dois motivos:
 
 **4. Se o defeito atingia base e ajustado igualmente, por que refazer?**
 "Porque ele não é neutro. Pune quem pede confirmação, e os dois modelos podem ter estilos diferentes. E as taxas absolutas vão para o relatório. Uma comparação justa num instrumento quebrado continua sendo medida errada."
+
+## Etapa 6 — o treino do modelo Lábia v0 (11/11/2026)
+
+### O que foi feito
+
+O Qwen3-4B foi ajustado com as 1.756 conversas aprovadas, numa sessão do Kaggle. O notebook:
+
+1. mediu sozinho qual configuração cabia na memória;
+2. treinou por 4,2 horas;
+3. fundiu o adaptador LoRA nos pesos;
+4. converteu o resultado para GGUF de 8 bits (3,99 GB).
+
+Fonte: `experiments/06-treino-sft/resumo.json`. A decisão está no [ADR 0010](decisoes/0010-configuracao-do-treino.md).
+
+### O que a sonda descobriu
+
+Das quatro configurações testadas com as 16 conversas mais longas (até 5,6 mil tokens), **três estouraram a memória**: LoRA em 16 bits com 1 ou 2 GPUs e QLoRA com 2 GPUs. Só o **Unsloth com QLoRA numa GPU** coube, com folga: pico de 4,9 GB. Sem a sonda, o treino teria caído no meio, depois de horas de fila.
+
+Uma lição contraintuitiva: **duas GPUs não resolvem falta de memória** no paralelismo de dados. Cada GPU guarda o modelo inteiro e processa a sua conversa inteira. Duas GPUs dobram a velocidade, não o espaço.
+
+### O que o treino mediu
+
+| | Valor |
+|---|---|
+| Passos | 293 (lote efetivo de 8 conversas) |
+| Épocas | 1,33, escolhidas pelo orçamento de tempo |
+| Velocidade | 490 tokens/s (a sonda estimou 305) |
+| Perda | 1,48 no primeiro registro, cerca de 0,35 no último |
+| Tokens que contam na perda | 427.624 de 5.605.905 (7,6%): só as falas do agente |
+
+### Conceitos desta etapa
+
+- **QLoRA:** o modelo-base fica guardado em 4 bits (ocupa um quarto da memória) e só as matrizes pequenas do LoRA são treinadas, em precisão maior. **Analogia:** em vez de reescrever um livro inteiro, você cola post-its nas páginas; o livro fica compactado na estante, e só os post-its são escritos à mão.
+- **Unsloth:** uma biblioteca que reescreve as contas mais pesadas do treino (atenção e perda) para gastar menos memória e tempo. O resultado matemático é o mesmo.
+- **Máscara da perda:** o modelo vê a conversa inteira, mas só é "corrigido" nas falas do agente. Se a perda contasse tudo, ele também aprenderia a imitar o cliente golpista e a decorar o texto da política.
+- **Perda (loss):** quanto o modelo errou ao prever a próxima palavra das respostas do professor. Cair de 1,48 para 0,35 quer dizer que ele aprendeu a imitar o professor. **Não** quer dizer que ficou seguro: isso só a avaliação mede.
+- **Épocas pelo orçamento:** o número de passadas foi calculado para caber no tempo da sessão. Assim a taxa de aprendizado termina o ciclo inteiro, em vez de o treino ser cortado no meio.
+- **Fundir e converter:** somar o LoRA aos pesos e salvar num formato (GGUF) que roda em servidores leves e até na CPU.
+
+### Alternativas descartadas
+
+| Alternativa | Por que não |
+|---|---|
+| Escolher a configuração no chute | três das quatro estouraram a memória; o chute mais óbvio (duas GPUs) falhava |
+| Cortar as conversas longas para caber | as conversas longas são as de mais insistência, justamente as que importam |
+| Forçar 2 épocas | não cabiam no orçamento de tempo na velocidade estimada |
+| Deixar a ablação escolher a própria configuração | a comparação misturaria o efeito do filtro com o da configuração |
+
+### Perguntas de entrevista sobre esta etapa
+
+**1. Por que QLoRA e não ajuste completo?**
+"Ajustar os 4 bilhões de parâmetros exigiria guardar gradientes e estados do otimizador para todos eles, muito além de 15 GB. Com QLoRA, o modelo fica em 4 bits e só treino matrizes pequenas, uma fração mínima dos parâmetros. Coube numa T4 com pico de 4,9 GB."
+
+**2. Você tinha duas GPUs. Por que treinou com uma?**
+"Porque medi. No paralelismo de dados, cada GPU guarda o modelo inteiro e processa conversas inteiras, e as minhas chegam a 5,6 mil tokens. As configurações com duas GPUs estouraram a memória. Só o Unsloth numa GPU coube. Duas GPUs aceleram, mas não dão mais memória por conversa."
+
+**3. A perda caiu para 0,35. Isso quer dizer que o modelo funciona?**
+"Não. Quer dizer que ele aprendeu a imitar o professor nos dados de treino. Se funciona, quem diz é a avaliação nos cenários de teste, que o modelo nunca viu, incluindo uma tática que ficou de fora do treino."
+
+**4. Por que a perda só nas falas do agente?**
+"O exemplo tem o prompt de sistema, as falas do cliente e as respostas das ferramentas. Se a perda contasse tudo, o modelo gastaria capacidade aprendendo a imitar o golpista e a decorar a política. Só 7,6% dos tokens contam: exatamente as decisões do atendente."
