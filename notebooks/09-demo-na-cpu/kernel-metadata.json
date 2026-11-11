@@ -1,0 +1,16 @@
+{
+  "id": "deniscarvalhotech/labia-09-demo-na-cpu",
+  "title": "Labia 09 - demo na cpu",
+  "code_file": "demo-cpu.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [
+    "deniscarvalhotech/labia-06-treino-sft"
+  ],
+  "model_sources": []
+}
