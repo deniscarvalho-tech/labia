@@ -1,0 +1,5 @@
+--extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+labia @ git+https://github.com/deniscarvalho-tech/labia.git@main
+llama-cpp-python==0.3.36
+transformers>=4.57
+huggingface_hub>=0.34
