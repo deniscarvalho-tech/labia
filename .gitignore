@@ -57,3 +57,7 @@ credentials.json
 
 # Cache das respostas dos modelos (pode ter gigabytes; vai para o Hugging Face quando for publicado)
 .cache/
+
+# Painel: dados copiados de results/ e tipos gerados dos schemas a cada build
+web/public/data/
+web/src/contract/

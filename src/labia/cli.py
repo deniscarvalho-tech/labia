@@ -254,6 +254,27 @@ def cmd_samples(args: argparse.Namespace) -> None:
     print("tudo com is_sample: true")
 
 
+def cmd_publish_check(_: argparse.Namespace) -> None:
+    """Recusa a publicação se algum arquivo do contrato for de exemplo ou não validar."""
+    from labia.contracts import CONTRACT_FILES, validate_file
+
+    problems = []
+    for published in CONTRACT_FILES:
+        path = Path(published)
+        if not path.exists():
+            problems.append(f"{published}: não existe")
+            continue
+        model = validate_file(published, path)
+        if getattr(model, "is_sample", True):
+            problems.append(f"{published}: is_sample é true (dado de exemplo não é publicado)")
+    if problems:
+        print("publicação recusada:")
+        for problem in problems:
+            print(f"  - {problem}")
+        raise SystemExit(1)
+    print("ok: todos os arquivos validam e nenhum é de exemplo")
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="labia", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -295,6 +316,10 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--scenarios", required=True)
     p.add_argument("--out", required=True)
     p.set_defaults(func=cmd_filter)
+
+    sub.add_parser("publish-check", help="recusa publicar dado de exemplo").set_defaults(
+        func=cmd_publish_check
+    )
 
     p = sub.add_parser("samples", help="gera os arquivos de resultado de exemplo (is_sample: true)")
     p.add_argument("--resamples", type=int, default=2000)

@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+/* Tokens do painel. Cores categóricas, de status e de superfície validadas com o
+   validate_palette.js (modo claro e escuro). Os componentes usam papéis, nunca hex. */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface-1: #fcfcfb;
+  --surface-2: #f3f2ee;
+  --ink-1: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-3: #6f6d68;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --ring: rgba(11, 11, 11, 0.1);
+  --accent: #2a78d6;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+  --series-6: #008300;
+  --series-7: #6250d6;
+  --series-8: #e34948;
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+  --good-ink: #006300;
+  --critical-ink: #b42323;
+  --highlight: #fdecec;
+  --seq-0: #cde2fb;
+  --seq-1: #9ec5f4;
+  --seq-2: #6da7ec;
+  --seq-3: #3987e5;
+  --seq-4: #256abf;
+  --seq-5: #184f95;
+  --seq-6: #0d366b;
+  --seq-text-0: #0b0b0b;
+  --seq-text-1: #0b0b0b;
+  --seq-text-2: #0b0b0b;
+  --seq-text-3: #ffffff;
+  --seq-text-4: #ffffff;
+  --seq-text-5: #ffffff;
+  --seq-text-6: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface-1: #1a1a19;
+    --surface-2: #232321;
+    --ink-1: #f0efec;
+    --ink-2: #c3c2b7;
+    --ink-3: #9d9b94;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --ring: rgba(255, 255, 255, 0.1);
+    --accent: #3987e5;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #d55181;
+    --series-6: #008300;
+    --series-7: #9085e9;
+    --series-8: #e66767;
+    --good-ink: #0ca30c;
+    --critical-ink: #e66767;
+    --highlight: #3a1d1d;
+    --seq-0: #104281;
+    --seq-1: #184f95;
+    --seq-2: #1c5cab;
+    --seq-3: #2a78d6;
+    --seq-4: #5598e7;
+    --seq-5: #86b6ef;
+    --seq-6: #b7d3f6;
+    --seq-text-0: #ffffff;
+    --seq-text-1: #ffffff;
+    --seq-text-2: #ffffff;
+    --seq-text-3: #ffffff;
+    --seq-text-4: #0b0b0b;
+    --seq-text-5: #0b0b0b;
+    --seq-text-6: #0b0b0b;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface-1: #1a1a19;
+  --surface-2: #232321;
+  --ink-1: #f0efec;
+  --ink-2: #c3c2b7;
+  --ink-3: #9d9b94;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --ring: rgba(255, 255, 255, 0.1);
+  --accent: #3987e5;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+  --series-6: #008300;
+  --series-7: #9085e9;
+  --series-8: #e66767;
+  --good-ink: #0ca30c;
+  --critical-ink: #e66767;
+  --highlight: #3a1d1d;
+  --seq-0: #104281;
+  --seq-1: #184f95;
+  --seq-2: #1c5cab;
+  --seq-3: #2a78d6;
+  --seq-4: #5598e7;
+  --seq-5: #86b6ef;
+  --seq-6: #b7d3f6;
+  --seq-text-0: #ffffff;
+  --seq-text-1: #ffffff;
+  --seq-text-2: #ffffff;
+  --seq-text-3: #ffffff;
+  --seq-text-4: #0b0b0b;
+  --seq-text-5: #0b0b0b;
+  --seq-text-6: #0b0b0b;
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink-1);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--grid);
+  --color-axis: var(--axis);
+  --color-accent: var(--accent);
+  --color-good: var(--good-ink);
+  --color-critical: var(--critical-ink);
+  --color-highlight: var(--highlight);
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html,
+body {
+  background: var(--page);
+  color: var(--ink-1);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Recharts: eixos e grade como linhas finas e recessivas */
+.recharts-cartesian-axis-tick-value {
+  fill: var(--ink-3);
+  font-size: 12px;
+}
+.recharts-cartesian-grid line {
+  stroke: var(--grid);
+}
+.recharts-cartesian-axis-line {
+  stroke: var(--axis);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

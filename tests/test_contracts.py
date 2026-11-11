@@ -100,3 +100,12 @@ def test_schemas_on_disk_match_the_models(tmp_path: Path) -> None:
         committed = Path("schemas") / name
         assert committed.exists(), f"rode `make schemas`: falta {committed}"
         assert committed.read_text(encoding="utf-8") == (tmp_path / name).read_text(encoding="utf-8"), name
+
+
+def test_publish_check_refuses_sample_data() -> None:
+    """Os arquivos atuais são de exemplo: a publicação tem de ser recusada."""
+    from labia.cli import main
+
+    with pytest.raises(SystemExit) as exc:
+        main(["publish-check"])
+    assert exc.value.code == 1
