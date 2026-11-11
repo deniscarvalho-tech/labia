@@ -62,3 +62,4 @@ credentials.json
 web/public/data/
 web/src/contract/
 web/tsconfig.tsbuildinfo
+hf/

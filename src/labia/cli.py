@@ -402,6 +402,29 @@ def cmd_generation_report(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_cards(args: argparse.Namespace) -> None:
+    """Escreve o model card e o dataset card do Hugging Face a partir dos arquivos de resultado."""
+    from labia.cards import dataset_card, model_card
+    from labia.contracts.metrics import MetricsFile
+
+    def read(path: str) -> Any:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    generation = read(args.generation)
+    (out / "dataset-card.md").write_bytes(
+        dataset_card(generation, read("scenarios-manifest.json")).encode("utf-8")
+    )
+    metrics = MetricsFile.model_validate_json(Path("results/metrics.json").read_text(encoding="utf-8"))
+    if metrics.is_sample:
+        print(f"dataset card em {out}; model card recusado: results/metrics.json é de exemplo")
+        return
+    card = model_card(metrics, read("results/hipoteses.json"), read(args.training), generation)
+    (out / "model-card.md").write_bytes(card.encode("utf-8"))
+    print(f"model card e dataset card em {out}")
+
+
 def cmd_report(_: argparse.Namespace) -> None:
     """Reescreve a seção de resultados do README a partir de results/*.json."""
     from labia.contracts.metrics import MetricsFile
@@ -489,6 +512,12 @@ def main(argv: list[str] | None = None) -> None:
     p.set_defaults(func=cmd_evaluate)
 
     sub.add_parser("report", help="reescreve os resultados do README").set_defaults(func=cmd_report)
+
+    p = sub.add_parser("cards", help="escreve o model card e o dataset card do Hugging Face")
+    p.add_argument("--training", default="experiments/06-treino-sft/treino.json")
+    p.add_argument("--generation", default="experiments/04-geracao/analise.json")
+    p.add_argument("--out", default="hf")
+    p.set_defaults(func=cmd_cards)
 
     p = sub.add_parser("generation-report", help="analisa as conversas cruas da geração")
     p.add_argument("runs", nargs="+")

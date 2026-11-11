@@ -109,3 +109,20 @@ def test_publish_check_refuses_sample_data() -> None:
     with pytest.raises(SystemExit) as exc:
         main(["publish-check"])
     assert exc.value.code == 1
+
+
+def test_cards_use_only_result_files() -> None:
+    import json
+
+    from labia.cards import dataset_card, model_card
+    from labia.contracts.metrics import MetricsFile
+
+    generation = json.loads(Path("experiments/04-geracao/analise.json").read_text(encoding="utf-8"))
+    manifest = json.loads(Path("scenarios-manifest.json").read_text(encoding="utf-8"))
+    card = dataset_card(generation, manifest)
+    assert f"{generation['aprovadas']:,}".replace(",", ".") in card
+    assert manifest["files"]["test"]["sha256"][:12] in card
+    sample = MetricsFile.model_validate_json(Path("results/metrics.json").read_text(encoding="utf-8"))
+    assert sample.is_sample
+    with pytest.raises(ValueError, match="resultado real"):
+        model_card(sample, {}, {}, generation)
