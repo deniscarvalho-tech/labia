@@ -110,6 +110,19 @@ uv run labia filter data/runs/professor.jsonl --scenarios data/scenarios/train.j
 
 Mostra quantas conversas passaram no filtro duplo e por que as outras foram reprovadas.
 
+## 7. Avaliar os modelos de ponta pelas APIs gratuitas
+
+O notebook `08-avaliacao-api` chama o DeepSeek (pelo teste gratuito da NVIDIA) e o Gemini (pela camada gratuita do Google AI Studio). As chaves ficam nos **Kaggle Secrets**: quem roda o notebook lê a chave, mas ela nunca aparece no código, na saída ou no git.
+
+1. **NVIDIA:** em build.nvidia.com, entre (ou crie a conta gratuita), abra a página do DeepSeek-V4.1-Flash e clique em "Get API Key". Copie.
+2. **Google:** em aistudio.google.com, entre com o Gmail e clique em "Get API key" e depois "Create API key". Copie.
+3. **Kaggle:** abra kaggle.com/code/deniscarvalhotech/labia-08-avaliacao-api, clique em **Edit**, depois no menu **Add-ons → Secrets → Add Secret**:
+   - Label `NVIDIA_API_KEY`, Value: a chave da NVIDIA;
+   - Label `GOOGLE_AI_STUDIO_API_KEY`, Value: a chave do Google.
+   Confira se os dois aparecem marcados como anexados a este notebook. Feche o editor sem rodar.
+
+Nunca cole as chaves no chat, num print ou num arquivo do projeto. Os termos dessas camadas permitem só teste e avaliação: nada do que esses modelos escreverem entra no dado de treino.
+
 ## Problemas comuns
 
 | Sintoma | Causa | Solução |
