@@ -1,0 +1,10 @@
+{
+  "gpu_t4_hora": {
+    "valor": 0.35,
+    "unidade": "USD por hora de GPU",
+    "fonte": "https://cloud.google.com/products/compute/gpus-pricing",
+    "consultado_em": "2026-11-11",
+    "nota": "Google Cloud, NVIDIA T4 sob demanda, por GPU, região us-west1. Não inclui a VM, o disco e a rede. A página é montada por JavaScript; o valor foi lido pela busca na própria página oficial."
+  },
+  "api": {}
+}

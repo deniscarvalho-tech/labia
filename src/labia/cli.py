@@ -439,6 +439,68 @@ def cmd_cards(args: argparse.Namespace) -> None:
     print(f"model card e dataset card em {out}")
 
 
+def cmd_cost(args: argparse.Namespace) -> None:
+    """Custo ESTIMADO por mil conversas e ponto de equilíbrio entre GPU própria e API (results/custo.json)."""
+    import statistics
+
+    from labia.costs import Price, api_cost, as_json, break_even, self_hosted, tokens_per_conversation
+    from labia.runner import load_records
+
+    prices = json.loads(Path(args.prices).read_text(encoding="utf-8"))
+    gpu = Price(**prices["gpu_t4_hora"])
+    hours: dict[str, float] = {}
+    for path in args.sessions:
+        for model_id, info in json.loads(Path(path).read_text(encoding="utf-8")).items():
+            if isinstance(info, dict) and "horas" in info:
+                hours[model_id] = float(info["horas"])
+    records = load_records(*map(Path, args.runs))
+    by_model: dict[str, list[Any]] = {}
+    for r in records:
+        by_model.setdefault(r.model_id, []).append(r)
+    out: dict[str, Any] = {
+        "kind": "estimated",
+        "premissas": [
+            "A vazão do modelo próprio vem da avaliação: uma T4 dedicada ao agente, 8 conversas ao mesmo tempo, "
+            "esperando o cliente simulado a cada turno. A capacidade real é igual ou maior.",
+            "A latência foi medida com 8 conversas simultâneas na mesma GPU; não é a latência de um usuário sozinho.",
+            "O custo da API usa os tokens medidos de cada conversa e o preço público por milhão de tokens, sem desconto "
+            "de cache.",
+            "O projeto não pagou nada: tudo rodou em camadas gratuitas.",
+        ],
+        "precos": {"gpu_t4_hora": as_json(gpu)},
+        "modelos": {},
+    }
+    for model_id, recs in sorted(by_model.items()):
+        lat = [t for r in recs for t in r.turn_latencies()]
+        entry: dict[str, Any] = {
+            "conversas": len(recs),
+            "latencia_turno_p50_s": round(statistics.median(lat), 2) if lat else None,
+        }
+        api = prices.get("api", {}).get(model_id)
+        if api:
+            p_in, p_out = Price(**api["entrada"]), Price(**api["saida"])
+            entry["api"] = api_cost(*tokens_per_conversation(recs), p_in, p_out)
+            out["precos"][model_id] = {"entrada": as_json(p_in), "saida": as_json(p_out)}
+        elif model_id in hours:
+            entry["gpu_propria"] = self_hosted(len(recs), hours[model_id], gpu)
+        out["modelos"][model_id] = entry
+    local = out["modelos"].get(args.own, {}).get("gpu_propria")
+    if local:
+        for entry in out["modelos"].values():
+            if "api" in entry:
+                entry["equilibrio_conversas_por_mes"] = break_even(
+                    local["usd_por_mes_gpu_dedicada"], entry["api"]["usd_por_conversa"]
+                )
+    target = Path("results/custo.json")
+    target.write_bytes((json.dumps(out, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+    for model_id, entry in out["modelos"].items():
+        cost = (entry.get("api") or entry.get("gpu_propria") or {}).get("usd_por_mil_conversas")
+        print(
+            f"{model_id}: US$ {cost} por mil conversas (estimado); latência p50 {entry['latencia_turno_p50_s']} s"
+        )
+    print(f"-> {target}")
+
+
 def cmd_report(_: argparse.Namespace) -> None:
     """Reescreve a seção de resultados do README a partir de results/*.json."""
     from labia.contracts.metrics import MetricsFile
@@ -526,6 +588,15 @@ def main(argv: list[str] | None = None) -> None:
     p.set_defaults(func=cmd_evaluate)
 
     sub.add_parser("report", help="reescreve os resultados do README").set_defaults(func=cmd_report)
+
+    p = sub.add_parser("cost", help="custo estimado por mil conversas e ponto de equilíbrio GPU × API")
+    p.add_argument("runs", nargs="+")
+    p.add_argument(
+        "--sessions", nargs="*", default=[], help="os resumo.json dos notebooks (horas por configuração)"
+    )
+    p.add_argument("--prices", default="configs/precos.json")
+    p.add_argument("--own", default="sft", help="o modelo servido na própria GPU, para o ponto de equilíbrio")
+    p.set_defaults(func=cmd_cost)
 
     p = sub.add_parser("cards", help="escreve o model card e o dataset card do Hugging Face")
     p.add_argument("--training", default="experiments/06-treino-sft/treino.json")

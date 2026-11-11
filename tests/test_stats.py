@@ -98,3 +98,17 @@ def test_kaplan_meier_bootstrap_brackets_the_curve() -> None:
     for value, ci in points[1:]:
         assert ci is not None
         assert ci[0] - 1e-9 <= value <= ci[1] + 1e-9
+
+
+def test_cost_estimates_and_break_even() -> None:
+    from labia.costs import Price, api_cost, break_even, self_hosted
+
+    gpu = Price(0.35, "USD/h", "teste", "2026-11-11")
+    local = self_hosted(n_conversations=350, hours=1.0, gpu=gpu)
+    assert local["conversas_por_hora_de_gpu"] == 350.0
+    assert local["usd_por_mil_conversas"] == 1.0  # 1000 / 350 * 0,35
+    assert local["usd_por_mes_gpu_dedicada"] == 255.5
+    api = api_cost(10_000, 500, Price(0.10, "USD/M", "t", "d"), Price(0.40, "USD/M", "t", "d"))
+    assert abs(api["usd_por_conversa"] - (0.001 + 0.0002)) < 1e-12
+    assert break_even(255.5, api["usd_por_conversa"]) == 212_917  # 255,5 / 0,0012 arredondado para cima
+    assert break_even(255.5, 0.0) is None
