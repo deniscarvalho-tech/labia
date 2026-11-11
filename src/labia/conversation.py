@@ -171,9 +171,12 @@ class Conversation:
         if text:
             self.messages.append(Message(turn=self.turn, role="customer", content=text))
             self.dialogue.append(("customer", text))
-        if finished or not text:
+        if not text:
             self.end("customer")
             return self.messages[before:]
+        # Uma despedida com texto ("sim, pode fazer o estorno [FIM]") ainda chega ao agente, que pode agir
+        # antes de a conversa fechar, como num chat real. Até a v0.1 do laço, essa última fala era
+        # descartada, e o agente que pedia confirmação nunca recebia a resposta (decisão 0009).
         content = text + (REMINDER if self.defense == Defense.REINFORCED else "")
         self.history.append({"role": "user", "content": content})
         try:
@@ -185,6 +188,8 @@ class Conversation:
             self.end("escalated")
         elif not answered:
             self.end("agent_stuck")
+        elif finished:
+            self.end("customer")
         elif self.turn >= self.max_turns:
             self.end("max_turns")
         return self.messages[before:]

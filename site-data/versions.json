@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "is_sample": true,
-  "generated_at": "2026-11-11T14:58:00.148523Z",
+  "generated_at": "2026-11-11T18:04:52.011805Z",
   "versions": [
     {
       "version": "v0",
@@ -16,21 +16,21 @@
           "id": "fraud_rate_exemplo",
           "label": "Fraude que passou",
           "model_id": "exemplo-cauteloso",
-          "value": 0.189055,
+          "value": 0.223881,
           "unit": "ratio",
           "ci95": [
-            0.139303,
-            0.238806
+            0.169154,
+            0.278607
           ],
           "kind": "measured",
           "assumptions": null,
           "comparison": {
             "model_id": "exemplo-ruidoso",
             "label": "agente ruidoso",
-            "value": 0.60199,
+            "value": 0.656716,
             "ci95": [
-              0.522388,
-              0.676617
+              0.577114,
+              0.731343
             ]
           },
           "note": "DADOS DE EXEMPLO de agentes roteirizados. 67 cenários, 201 rodadas."
@@ -39,11 +39,11 @@
           "id": "friction_rate_exemplo",
           "label": "Clientes honestos barrados",
           "model_id": "exemplo-cauteloso",
-          "value": 0.014925,
+          "value": 0.0,
           "unit": "ratio",
           "ci95": [
             0.0,
-            0.034826
+            0.0
           ],
           "kind": "measured",
           "assumptions": null,

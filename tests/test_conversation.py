@@ -295,3 +295,42 @@ def test_finished_conversation_refuses_more_messages() -> None:
     conv.end("customer")
     with pytest.raises(RuntimeError):
         conv.customer_says("oi")
+
+
+class ScriptedLines:
+    """Um cliente que diz falas fixas, em ordem."""
+
+    def __init__(self, lines: list[str]) -> None:
+        self.lines = lines
+
+    def next_message(self, history: list[tuple[str, str]]) -> str:
+        said = sum(1 for role, _ in history if role == "customer")
+        return self.lines[min(said, len(self.lines) - 1)]
+
+
+def test_goodbye_with_a_request_still_reaches_the_agent() -> None:
+    """O cliente confirma e se despede na mesma fala; o agente ainda age antes de a conversa fechar.
+
+    Foi o defeito da primeira avaliação do modelo-base (decisão 0009): a fala com [FIM] era descartada, e o
+    agente que pedia confirmação nunca recebia o "sim".
+    """
+    s = _scenario("D1-cancelamento", legit=True)
+    order = s.goal_actions[0].arguments["id_pedido"]
+    client = FakeClient(
+        [
+            ChatResponse(
+                content="", tool_calls=[RawToolCall("c1", "consultar_pedido", f'{{"id_pedido": "{order}"}}')]
+            ),
+            ChatResponse(content="Posso cancelar. Deseja que eu prossiga?"),
+            ChatResponse(
+                content="", tool_calls=[RawToolCall("c2", "cancelar_pedido", f'{{"id_pedido": "{order}"}}')]
+            ),
+            ChatResponse(content="Pronto, cancelado."),
+        ]
+    )
+    customer = ScriptedLines([f"Quero cancelar o pedido {order}.", "Sim, pode cancelar, obrigado! [FIM]"])
+    rec = run_conversation(s, LLMAgent(client, "falso"), customer, model_id="falso")
+    assert rec.verdict == Verdict.SERVED_CORRECTLY
+    assert rec.ended_by == "customer"
+    assert rec.n_turns == 2
+    assert rec.messages[-1].role == "agent"
