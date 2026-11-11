@@ -381,3 +381,47 @@ def test_local_llm_client_reads_tool_calls_from_text() -> None:
         ("consultar_pedido", {"id_pedido": "QTI-1"})
     ]
     assert (reply.prompt_tokens, reply.completion_tokens) == (7, 3)
+
+
+def test_local_llm_client_warms_and_restores_a_scenario() -> None:
+    """O estado guardado de um cenário volta antes da conversa: a CPU não relê a política inteira."""
+    import threading
+
+    from labia.local_llm import LlamaCppClient
+
+    class FakeTokenizer:
+        def apply_chat_template(self, messages: list[dict[str, Any]], **kw: Any) -> str:
+            return "|".join(m["role"] for m in messages) + ("|gen" if kw.get("add_generation_prompt") else "")
+
+    class FakeLlama:
+        def __init__(self) -> None:
+            self.evaluated: list[list[int]] = []
+            self.loaded: list[str] = []
+
+        def reset(self) -> None: ...
+
+        def tokenize(self, text: bytes, special: bool = False) -> list[int]:
+            assert special
+            return list(text)
+
+        def eval(self, tokens: list[int]) -> None:
+            self.evaluated.append(tokens)
+
+        def save_state(self) -> str:
+            return f"estado-{len(self.evaluated)}"
+
+        def load_state(self, state: str) -> None:
+            self.loaded.append(state)
+
+    client = object.__new__(LlamaCppClient)
+    client.llm, client.tokenizer, client.lock, client.states = (
+        FakeLlama(),
+        FakeTokenizer(),
+        threading.Lock(),
+        {},
+    )
+    client.warm("cenario-1", {"role": "system", "content": "política"}, tools=[])
+    assert client.llm.evaluated == [list(b"system")]  # só o prefixo, sem o pedido de geração
+    assert client.restore("cenario-1")
+    assert client.llm.loaded == ["estado-1"]
+    assert not client.restore("outro")

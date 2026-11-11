@@ -26,12 +26,36 @@ class LlamaCppClient:
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_repo)
         # O llama.cpp não é seguro entre threads; a demo atende uma pessoa por vez.
         self.lock = threading.Lock()
+        self.states: dict[str, Any] = {}
 
-    def render(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None) -> str:
+    def render(
+        self, messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None, *, generation: bool = True
+    ) -> str:
         prompt = self.tokenizer.apply_chat_template(
-            messages, tools=tools, add_generation_prompt=True, tokenize=False
+            messages, tools=tools, add_generation_prompt=generation, tokenize=False
         )
         return str(prompt)
+
+    def warm(self, key: str, system: dict[str, Any], tools: list[dict[str, Any]] | None) -> None:
+        """Lê uma vez o começo fixo de um cenário (política e ferramentas) e guarda o estado do modelo.
+
+        Na CPU, ler esses cerca de 2.500 tokens leva uns 3 minutos. Com o estado guardado, a primeira resposta
+        ao cliente só lê o que vem depois, porque o llama.cpp reaproveita o prefixo comum.
+        """
+        prefix = self.render([system], tools, generation=False)
+        with self.lock:
+            self.llm.reset()
+            self.llm.eval(self.llm.tokenize(prefix.encode("utf-8"), special=True))
+            self.states[key] = self.llm.save_state()
+
+    def restore(self, key: str) -> bool:
+        """Volta o modelo ao estado guardado do cenário. Devolve se havia estado."""
+        state = self.states.get(key)
+        if state is None:
+            return False
+        with self.lock:
+            self.llm.load_state(state)
+        return True
 
     def complete(self, request: ChatRequest) -> ChatResponse:
         prompt = self.render(request.messages, request.tools)

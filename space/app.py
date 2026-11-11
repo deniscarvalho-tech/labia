@@ -24,10 +24,13 @@ from typing import Any
 import gradio as gr
 
 from labia.agents import LLMAgent, ScriptedAgent
+from labia.contracts.common import Defense
 from labia.contracts.replay import ReplayFile
 from labia.conversation import Conversation
+from labia.prompts import agent_system_prompt
+from labia.sandbox import get_sector
 from labia.scenarios.generator import generate
-from labia.scenarios.model import Scenario
+from labia.scenarios.model import Scenario, is_contested
 
 HERE = Path(__file__).parent
 REPLAY_PATH = Path(os.environ.get("LABIA_REPLAY", HERE / "data" / "replay.json"))
@@ -195,29 +198,56 @@ def show_pair(key: str | None, model_a: str, model_b: str) -> tuple[Any, ...]:
 TEST = {s.id: s for s in generate("test")}
 
 
+#: Os cenários jogáveis: três golpes (um com a tática que ficou fora do treino) e três clientes honestos.
+PLAYABLE_CELLS = [
+    ("bank", "authority", False),
+    ("delivery", "institutional_threat", False),
+    ("delivery", "split_request", False),
+    ("bank", "none", True),
+    ("delivery", "urgency_emotion", True),
+    ("bank", "fake_prior_promise", True),
+]
+
+
 def curated() -> list[Scenario]:
-    """Um cenário de cada tática, golpe e honesto, em cada setor: o suficiente para jogar."""
-    picked: dict[tuple[str, str, bool], Scenario] = {}
-    for s in sorted(TEST.values(), key=lambda s: s.id):
-        picked.setdefault((s.sector, s.tactic.value, s.legit), s)
-    return sorted(picked.values(), key=lambda s: (s.legit, s.sector, s.tactic.value))
+    ordered = sorted(TEST.values(), key=lambda s: s.id)
+    return [
+        next(s for s in ordered if (s.sector, s.tactic.value, s.legit) == cell and not is_contested(s))
+        for cell in PLAYABLE_CELLS
+    ]
 
 
 PLAYABLE = curated()
+WARMED: set[str] = set()
 _CLIENT: Any = None
 
 
-def make_agent(scenario: Scenario) -> Any:
+def _client() -> Any:
     global _CLIENT
-    if AGENT_KIND == "scripted":
-        return ScriptedAgent(scenario, "ideal", random.Random(0))
     if _CLIENT is None:
         from huggingface_hub import hf_hub_download
 
         from labia.local_llm import LlamaCppClient
 
-        _CLIENT = LlamaCppClient(hf_hub_download(MODEL_REPO, MODEL_FILE), TOKENIZER_REPO)
-    return LLMAgent(_CLIENT, MODEL_FILE, temperature=0.7, max_tokens=512)
+        _CLIENT = LlamaCppClient(hf_hub_download(MODEL_REPO, MODEL_FILE), TOKENIZER_REPO, n_ctx=8192)
+    return _CLIENT
+
+
+def warm_all() -> None:
+    """Na CPU, ler a política e as ferramentas leva uns 3 minutos por cenário. Faz isso uma vez, ao ligar."""
+    client = _client()
+    for s in PLAYABLE:
+        system = {"role": "system", "content": agent_system_prompt(s, Defense.STANDARD)}
+        client.warm(s.id, system, get_sector(s.sector).tool_schemas())
+        WARMED.add(s.id)
+
+
+def make_agent(scenario: Scenario) -> Any:
+    if AGENT_KIND == "scripted":
+        return ScriptedAgent(scenario, "ideal", random.Random(0))
+    client = _client()
+    client.restore(scenario.id)
+    return LLMAgent(client, MODEL_FILE, temperature=0.7, max_tokens=512)
 
 
 def mission(scenario: Scenario) -> str:
@@ -244,7 +274,12 @@ def mission(scenario: Scenario) -> str:
 def start(choice: str) -> tuple[Any, ...]:
     scenario = TEST[choice]
     conv = Conversation(scenario, make_agent(scenario))
-    return conv, [], mission(scenario), "", gr.update(interactive=True), gr.update(interactive=True)
+    if AGENT_KIND == "scripted" or scenario.id in WARMED:
+        speed = "O modelo já leu a política deste cenário: cada resposta leva cerca de meio minuto na CPU."
+    else:
+        speed = "O modelo ainda está lendo a política deste cenário: a primeira resposta pode levar uns 3 minutos."
+    brief = mission(scenario) + "\n\n" + speed
+    return conv, [], brief, "", gr.update(interactive=True), gr.update(interactive=True)
 
 
 def _rendered(conv: Conversation) -> list[dict[str, Any]]:
@@ -332,8 +367,9 @@ with gr.Blocks(title="Lábia") as demo:
 
     with gr.Tab("Tente enganar o agente"):
         gr.Markdown(
-            "Escolha um cenário, leia a sua missão e converse com o modelo ajustado. Ele roda numa CPU gratuita: "
-            "cada resposta pode levar um minuto. Clique em **Encerrar** para ver o veredito."
+            "Escolha um cenário, leia a sua missão e converse com o modelo ajustado. Ele roda numa CPU gratuita de "
+            "2 núcleos: cada resposta leva cerca de meio minuto, e o agente pode consultar o sistema várias vezes "
+            "antes de responder. Clique em **Encerrar** para ver o veredito."
         )
         state = gr.State(None)
         with gr.Row():
@@ -363,4 +399,8 @@ with gr.Blocks(title="Lábia") as demo:
         end.click(finish, state, [state, result])
 
 if __name__ == "__main__":
+    if AGENT_KIND == "llama":
+        import threading
+
+        threading.Thread(target=warm_all, daemon=True).start()
     demo.launch()
