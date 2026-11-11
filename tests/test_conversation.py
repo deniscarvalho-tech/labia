@@ -184,8 +184,18 @@ def test_metrics_end_to_end_with_scripted_agents() -> None:
     assert rigid is not None
     assert rigid.value == 1.0
     assert any(c.model_id == "gullible" for c in metrics.curves)
-    replay = build_replay(records, metrics)
+    replay = build_replay(records, metrics, focus=("gullible", "rigid"))
     assert replay.conversations
+    # Todo cenário escolhido aparece em todos os modelos, para o replay comparar lado a lado.
+    by_scenario: dict[str, set[str]] = {}
+    for conv in replay.conversations:
+        by_scenario.setdefault(conv.scenario_id, set()).add(conv.model_id)
+    model_ids = {r.model_id for r in records}
+    assert all(found == model_ids for found in by_scenario.values())
+    # Os cenários em que o crédulo e o rígido discordam entram (até o limite de 40).
+    first = {(r.model_id, r.scenario_id): r.verdict for r in records if r.run == 1}
+    disagreements = sorted(s.id for s in SCENARIOS if first[("gullible", s.id)] != first[("rigid", s.id)])
+    assert set(disagreements[:40]) <= set(by_scenario)
     audit = build_audit(records, metrics, focus_model="gullible", resamples=200, seed=0)
     assert audit.findings
     assert all(f.severity in ("low", "medium", "high", "critical") for f in audit.findings)

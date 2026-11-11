@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "is_sample": true,
-  "generated_at": "2026-11-10T23:37:15.497054Z",
-  "git_sha": "b00df28",
+  "generated_at": "2026-11-11T14:58:00.023491Z",
+  "git_sha": "2d0da10",
   "release": "v0",
   "scope": {
     "agents": [

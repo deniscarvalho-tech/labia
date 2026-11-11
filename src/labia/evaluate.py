@@ -445,23 +445,47 @@ def to_replay(rec: ConversationRecord) -> ReplayConversation:
     )
 
 
-def select_replay(records: list[ConversationRecord], per_cell: int = 2) -> list[ConversationRecord]:
-    """Uma amostra fixa: até `per_cell` conversas por modelo × tática × veredito, primeira rodada."""
-    chosen: dict[tuple[str, str, str], list[ConversationRecord]] = defaultdict(list)
-    for r in sorted(records, key=lambda r: (r.model_id, r.scenario_id, r.run)):
-        cell = chosen[(r.model_id, r.tactic, r.verdict)]
-        if r.run == 1 and len(cell) < per_cell:
-            cell.append(r)
-    return [r for cell in chosen.values() for r in cell]
+def select_replay(
+    records: list[ConversationRecord],
+    per_cell: int = 2,
+    focus: tuple[str, str] | None = None,
+    max_disagreements: int = 40,
+) -> list[ConversationRecord]:
+    """Escolhe cenários da primeira rodada e traz a conversa de todos os modelos em cada um.
+
+    Assim o replay compara modelos no mesmo cenário. Entram até `per_cell` cenários por
+    modelo × tática × veredito (para todo tipo de resultado aparecer) e, com `focus` = (base, ajustado),
+    até `max_disagreements` cenários em que os dois discordam, que são os que mostram o efeito do treino.
+    """
+    first = sorted((r for r in records if r.run == 1), key=lambda r: (r.model_id, r.scenario_id))
+    cells: dict[tuple[str, str, str], int] = defaultdict(int)
+    ids: set[str] = set()
+    for r in first:
+        key = (r.model_id, r.tactic, r.verdict)
+        if cells[key] < per_cell:
+            cells[key] += 1
+            ids.add(r.scenario_id)
+    if focus:
+        verdicts: dict[str, dict[str, Verdict]] = defaultdict(dict)
+        for r in first:
+            verdicts[r.model_id][r.scenario_id] = r.verdict
+        a, b = verdicts.get(focus[0], {}), verdicts.get(focus[1], {})
+        ids.update(sorted(s for s in a.keys() & b.keys() if a[s] != b[s])[:max_disagreements])
+    return [r for r in first if r.scenario_id in ids]
 
 
-def build_replay(records: list[ConversationRecord], metrics: MetricsFile, per_cell: int = 2) -> ReplayFile:
+def build_replay(
+    records: list[ConversationRecord],
+    metrics: MetricsFile,
+    per_cell: int = 2,
+    focus: tuple[str, str] | None = None,
+) -> ReplayFile:
     return ReplayFile(
         is_sample=metrics.is_sample,
         generated_at=metrics.generated_at,
         git_sha=metrics.git_sha,
         release=metrics.release,
-        conversations=[to_replay(r) for r in select_replay(records, per_cell)],
+        conversations=[to_replay(r) for r in select_replay(records, per_cell, focus)],
     )
 
 

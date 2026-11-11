@@ -226,7 +226,7 @@ def cmd_samples(args: argparse.Namespace) -> None:
         note=note,
     )
     summary = build_summary(metrics, cards, extra=[cost])
-    replay = build_replay(records, metrics)
+    replay = build_replay(records, metrics, focus=("exemplo-ruidoso", "exemplo-cauteloso"))
     audit = build_audit(records, metrics, focus_model="exemplo-ruidoso", resamples=args.resamples, seed=0)
     versions = VersionsFile(
         is_sample=True,
@@ -339,7 +339,7 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         ),
     ]
     summary = build_summary(metrics, cards)
-    replay = build_replay(records, metrics)
+    replay = build_replay(records, metrics, focus=(args.baseline, args.focus))
     audit = build_audit(records, metrics, focus_model=args.baseline, resamples=args.resamples, seed=0)
     retested = []
     for finding in audit.findings:
